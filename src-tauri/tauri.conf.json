@@ -20,8 +20,7 @@
         "alwaysOnTop": true,
         "visible": false,
         "center": true,
-        "skipTaskbar": true,
-        "fileDropEnabled": false
+        "skipTaskbar": true
       }
     ],
     "security": {
