@@ -1,6 +1,6 @@
 use tauri::{
     tray::{TrayIconBuilder, TrayIconEvent},
-    App, Manager,
+    App,
 };
 
 pub fn setup_tray(app: &mut App) -> tauri::Result<()> {
