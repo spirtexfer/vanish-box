@@ -3,6 +3,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
 import { useShelfStore, ShelfFile } from '../store/useShelfStore'
 import { FileItem } from './FileItem'
+import { SettingsRow } from './SettingsRow'
 
 interface RawFileInfo {
   name: string
@@ -12,7 +13,7 @@ interface RawFileInfo {
 
 
 export function ShelfPanel() {
-  const { files, addFiles, removeFile, settings } = useShelfStore()
+  const { files, addFiles, removeFile, settings, updateSettings } = useShelfStore()
 
   async function handleOpen(path: string) {
     await invoke('open_file', { path })
@@ -136,6 +137,7 @@ export function ShelfPanel() {
           </ul>
         )}
       </main>
+      <SettingsRow settings={settings} onUpdate={updateSettings} />
     </div>
   )
 }
