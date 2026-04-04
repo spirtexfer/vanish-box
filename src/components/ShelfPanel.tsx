@@ -36,24 +36,26 @@ export function ShelfPanel() {
 
   return (
     <div
-      data-tauri-drag-region
       style={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100vh',
+        height: '100%',
         fontFamily: 'system-ui, sans-serif',
         background: '#ffffff',
-        WebkitAppRegion: 'drag',
-      } as React.CSSProperties}
+      }}
     >
       <header
+        data-tauri-drag-region
         style={{
           padding: '12px 16px',
           borderBottom: '1px solid #e5e7eb',
           fontWeight: 600,
           fontSize: '14px',
           flexShrink: 0,
-        }}
+          textAlign: 'center',
+          cursor: 'grab',
+          WebkitAppRegion: 'drag',
+        } as React.CSSProperties}
       >
         Vanish Box
       </header>
@@ -67,8 +69,7 @@ export function ShelfPanel() {
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          WebkitAppRegion: 'no-drag',
-        } as React.CSSProperties}
+        }}
       >
         {files.length === 0 ? (
           <div
