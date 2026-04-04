@@ -1,8 +1,16 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod tray;
 mod window;
 
 fn main() {
-    tauri_app_lib::run()
+    tauri::Builder::default()
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .setup(|app| {
+            tray::setup_tray(app)?;
+            Ok(())
+        })
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }
