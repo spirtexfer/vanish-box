@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
 import { useShelfStore, ShelfFile } from '../store/useShelfStore'
+import { FileItem } from './FileItem'
 
 interface RawFileInfo {
   name: string
@@ -9,14 +10,13 @@ interface RawFileInfo {
   path: string
 }
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
 
 export function ShelfPanel() {
-  const { files, addFiles } = useShelfStore()
+  const { files, addFiles, removeFile, settings } = useShelfStore()
+
+  async function handleOpen(path: string) {
+    await invoke('open_file', { path })
+  }
   const [isDraggingOver, setIsDraggingOver] = useState(false)
 
   useEffect(() => {
@@ -125,34 +125,13 @@ export function ShelfPanel() {
             }}
           >
             {files.map((file) => (
-              <li
+              <FileItem
                 key={file.id}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '8px 10px',
-                  marginBottom: '4px',
-                  background: '#f9fafb',
-                  borderRadius: '6px',
-                  fontSize: '12px',
-                }}
-              >
-                <span
-                  style={{
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    marginRight: '8px',
-                    color: '#111827',
-                  }}
-                >
-                  {file.name}
-                </span>
-                <span style={{ color: '#9ca3af', flexShrink: 0 }}>
-                  {formatSize(file.size)}
-                </span>
-              </li>
+                file={file}
+                settings={settings}
+                onRemove={removeFile}
+                onOpen={handleOpen}
+              />
             ))}
           </ul>
         )}
