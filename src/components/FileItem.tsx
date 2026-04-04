@@ -63,7 +63,10 @@ export function FileItem({ file, settings, onRemove, onOpen }: FileItemProps) {
 
       <button
         aria-label="remove"
-        onClick={() => onRemove(file.id)}
+        onClick={(e) => {
+          e.stopPropagation()
+          onRemove(file.id)
+        }}
         style={{
           background: 'none',
           border: 'none',

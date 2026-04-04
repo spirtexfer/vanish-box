@@ -107,4 +107,20 @@ describe('FileItem', () => {
     )
     expect(screen.queryByTestId('file-timestamp')).toBeNull()
   })
+
+  it('clicking remove does not call onOpen', () => {
+    const onOpen = vi.fn()
+    const onRemove = vi.fn()
+    render(
+      <FileItem
+        file={baseFile}
+        settings={baseSettings}
+        onRemove={onRemove}
+        onOpen={onOpen}
+      />
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'remove' }))
+    expect(onOpen).not.toHaveBeenCalled()
+    expect(onRemove).toHaveBeenCalledWith('test-id')
+  })
 })

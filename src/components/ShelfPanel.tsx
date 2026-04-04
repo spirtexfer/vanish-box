@@ -16,7 +16,11 @@ export function ShelfPanel() {
   const { files, addFiles, removeFile, settings, updateSettings } = useShelfStore()
 
   async function handleOpen(path: string) {
-    await invoke('open_file', { path })
+    try {
+      await invoke('open_file', { path })
+    } catch (e) {
+      console.error('[VanishBox] Failed to open file:', path, e)
+    }
   }
   const [isDraggingOver, setIsDraggingOver] = useState(false)
 

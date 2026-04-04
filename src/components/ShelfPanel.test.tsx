@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, act } from '@testing-library/react'
+import { render, screen, act, fireEvent } from '@testing-library/react'
 import { ShelfPanel } from './ShelfPanel'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useShelfStore } from '../store/useShelfStore'
@@ -120,5 +120,29 @@ describe('ShelfPanel', () => {
     // so the OS won't fire events to it. In tests we can only verify unlisten was called.
     expect(allUnlistens[0]).toHaveBeenCalledTimes(1)
     expect(allUnlistens[1]).not.toHaveBeenCalled() // second (surviving) listener still active
+  })
+
+  it('does not crash when open_file fails for a missing or moved file', async () => {
+    // First call (get_file_infos) resolves; second call (open_file) rejects
+    mockInvoke
+      .mockResolvedValueOnce([{ name: 'gone.png', size: 512, path: 'C:\\gone.png' }])
+      .mockRejectedValueOnce(new Error('file not found'))
+
+    render(<ShelfPanel />)
+
+    await act(async () => {
+      await capturedCallback?.({ payload: { type: 'drop', paths: ['C:\\gone.png'] } })
+    })
+
+    // File appears in list
+    expect(screen.getByText('gone.png')).toBeTruthy()
+
+    // Clicking the name tries to open — invoke rejects — component must not crash
+    await act(async () => {
+      fireEvent.click(screen.getByText('gone.png'))
+    })
+
+    // Still rendered after the failed open
+    expect(screen.getByText('gone.png')).toBeTruthy()
   })
 })
