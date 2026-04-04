@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { getCurrentWindow } from '@tauri-apps/api/window'
+import { invoke } from '@tauri-apps/api/core'
 
 interface DroppedFile {
   name: string
@@ -15,24 +17,41 @@ export function ShelfPanel() {
   const [files, setFiles] = useState<DroppedFile[]>([])
   const [isDraggingOver, setIsDraggingOver] = useState(false)
 
-  function handleDragOver(e: React.DragEvent) {
-    e.preventDefault()
-    setIsDraggingOver(true)
-  }
+  useEffect(() => {
+    let cancelled = false
+    let unlisten: (() => void) | undefined
 
-  function handleDragLeave() {
-    setIsDraggingOver(false)
-  }
+    getCurrentWindow()
+      .onDragDropEvent(async (event) => {
+        const { type } = event.payload
 
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault()
-    setIsDraggingOver(false)
-    const incoming = Array.from(e.dataTransfer.files).map((f) => ({
-      name: f.name,
-      size: f.size,
-    }))
-    setFiles((prev) => [...prev, ...incoming])
-  }
+        if (type === 'enter' || type === 'over') {
+          setIsDraggingOver(true)
+        } else if (type === 'leave') {
+          setIsDraggingOver(false)
+        } else if (type === 'drop') {
+          setIsDraggingOver(false)
+          const paths = (event.payload as { type: 'drop'; paths: string[] }).paths ?? []
+          console.log('[VanishBox] Native drop event fired:', paths)
+          if (paths.length > 0) {
+            const infos = await invoke<DroppedFile[]>('get_file_infos', { paths })
+            setFiles((prev) => [...prev, ...infos])
+          }
+        }
+      })
+      .then((fn) => {
+        if (cancelled) {
+          fn()
+        } else {
+          unlisten = fn
+        }
+      })
+
+    return () => {
+      cancelled = true
+      unlisten?.()
+    }
+  }, [])
 
   return (
     <div
@@ -41,7 +60,8 @@ export function ShelfPanel() {
         flexDirection: 'column',
         height: '100%',
         fontFamily: 'system-ui, sans-serif',
-        background: '#ffffff',
+        background: isDraggingOver ? '#eef2ff' : '#ffffff',
+        transition: 'background 0.15s',
       }}
     >
       <header
@@ -61,9 +81,6 @@ export function ShelfPanel() {
       </header>
 
       <main
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
         style={{
           flex: 1,
           display: 'flex',
