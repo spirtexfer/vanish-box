@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
+import { useShelfStore, ShelfFile } from '../store/useShelfStore'
 
-interface DroppedFile {
+interface RawFileInfo {
   name: string
   size: number
+  path: string
 }
 
 function formatSize(bytes: number): string {
@@ -14,7 +16,7 @@ function formatSize(bytes: number): string {
 }
 
 export function ShelfPanel() {
-  const [files, setFiles] = useState<DroppedFile[]>([])
+  const { files, addFiles } = useShelfStore()
   const [isDraggingOver, setIsDraggingOver] = useState(false)
 
   useEffect(() => {
@@ -34,8 +36,15 @@ export function ShelfPanel() {
           const paths = (event.payload as { type: 'drop'; paths: string[] }).paths ?? []
           console.log('[VanishBox] Native drop event fired:', paths)
           if (paths.length > 0) {
-            const infos = await invoke<DroppedFile[]>('get_file_infos', { paths })
-            setFiles((prev) => [...prev, ...infos])
+            const raw = await invoke<RawFileInfo[]>('get_file_infos', { paths })
+            const newFiles: ShelfFile[] = raw.map((r) => ({
+              id: crypto.randomUUID(),
+              name: r.name,
+              size: r.size,
+              path: r.path,
+              addedAt: Date.now(),
+            }))
+            addFiles(newFiles)
           }
         }
       })
@@ -51,7 +60,7 @@ export function ShelfPanel() {
       cancelled = true
       unlisten?.()
     }
-  }, [])
+  }, [addFiles])
 
   return (
     <div
@@ -115,9 +124,9 @@ export function ShelfPanel() {
               listStyle: 'none',
             }}
           >
-            {files.map((file, i) => (
+            {files.map((file) => (
               <li
-                key={i}
+                key={file.id}
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import { ShelfPanel } from './ShelfPanel'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import { useShelfStore } from '../store/useShelfStore'
 
 // Capture the callback registered by useEffect so tests can trigger native events
 type DragDropCallback = (event: { payload: { type: string; paths?: string[] } }) => Promise<void>
@@ -23,7 +24,8 @@ describe('ShelfPanel', () => {
   beforeEach(() => {
     capturedCallback = null
     mockInvoke.mockReset()
-    // Default mock: simple single-callback capture
+    useShelfStore.getState().reset()
+    // Reset default mock
     vi.mocked(getCurrentWindow).mockReturnValue({
       onDragDropEvent: (cb: DragDropCallback) => {
         capturedCallback = cb
@@ -44,8 +46,8 @@ describe('ShelfPanel', () => {
 
   it('renders file list after native drop event resolves', async () => {
     mockInvoke.mockResolvedValue([
-      { name: 'photo.png', size: 204800 },
-      { name: 'report.pdf', size: 1048576 },
+      { name: 'photo.png', size: 204800, path: 'C:\\Users\\test\\photo.png' },
+      { name: 'report.pdf', size: 1048576, path: 'C:\\Users\\test\\report.pdf' },
     ])
 
     render(<ShelfPanel />)
@@ -61,7 +63,7 @@ describe('ShelfPanel', () => {
   })
 
   it('hides the drop hint once files are present', async () => {
-    mockInvoke.mockResolvedValue([{ name: 'image.jpg', size: 512 }])
+    mockInvoke.mockResolvedValue([{ name: 'image.jpg', size: 512, path: 'C:\\image.jpg' }])
 
     render(<ShelfPanel />)
 
@@ -86,7 +88,7 @@ describe('ShelfPanel', () => {
       },
     } as ReturnType<typeof getCurrentWindow>)
 
-    mockInvoke.mockResolvedValue([{ name: 'test.png', size: 100 }])
+    mockInvoke.mockResolvedValue([{ name: 'test.png', size: 100, path: 'C:\\test.png' }])
 
     const { unmount } = render(<ShelfPanel />)
     // Wait for first Promise to resolve so cancelled flag is checked
