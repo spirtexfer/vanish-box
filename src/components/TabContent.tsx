@@ -2,6 +2,7 @@ import { Tab } from '../store/useWorkspaceStore'
 import { ColorTokens } from '../theme'
 import { FilesSection } from './FilesSection'
 import { NotesSection } from './NotesSection'
+import { SketchesSection } from './SketchesSection'
 
 interface TabContentProps {
   tab: Tab
@@ -45,23 +46,7 @@ export function TabContent({ tab, colors }: TabContentProps) {
           ) : section.type === 'notes' ? (
             <NotesSection tabId={tab.id} colors={colors} />
           ) : (
-            <div
-              style={{
-                background: colors.bgSecondary,
-                border: `1px solid ${colors.border}`,
-                borderRadius: '8px',
-                padding: '12px',
-                fontSize: '12px',
-                color: colors.textMuted,
-                textAlign: 'center',
-                minHeight: '48px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              No sketches yet
-            </div>
+            <SketchesSection tabId={tab.id} colors={colors} />
           )}
         </section>
       ))}
