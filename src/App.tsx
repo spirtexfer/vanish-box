@@ -1,7 +1,7 @@
-import { ShelfPanel } from './components/ShelfPanel'
+import { WorkspacePanel } from './components/WorkspacePanel'
 
 function App() {
-  return <ShelfPanel />
+  return <WorkspacePanel />
 }
 
 export default App
