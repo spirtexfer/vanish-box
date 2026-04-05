@@ -1,6 +1,7 @@
 import { Tab } from '../store/useWorkspaceStore'
 import { ColorTokens } from '../theme'
 import { FilesSection } from './FilesSection'
+import { NotesSection } from './NotesSection'
 
 interface TabContentProps {
   tab: Tab
@@ -41,6 +42,8 @@ export function TabContent({ tab, colors }: TabContentProps) {
           </h3>
           {section.type === 'files' ? (
             <FilesSection tabId={tab.id} colors={colors} />
+          ) : section.type === 'notes' ? (
+            <NotesSection tabId={tab.id} colors={colors} />
           ) : (
             <div
               style={{
@@ -57,8 +60,7 @@ export function TabContent({ tab, colors }: TabContentProps) {
                 justifyContent: 'center',
               }}
             >
-              {section.type === 'notes' && 'No notes yet'}
-              {section.type === 'sketches' && 'No sketches yet'}
+              No sketches yet
             </div>
           )}
         </section>
