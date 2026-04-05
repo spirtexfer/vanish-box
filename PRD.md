@@ -2,76 +2,82 @@
 
 ## Product
 
-Temp Shelf
+Vanish Box
 
 ## Problem
 
-Users constantly create temporary files during normal work: screenshots, downloaded documents, copied images, and other files that are needed once and then forgotten. These files accumulate in permanent storage locations and slowly create clutter, confusion, and organizational overhead.
+Knowledge workers constantly switch between tasks and accumulate active materials — downloaded files, quick notes, rough sketches — that have no natural home. These end up scattered across Downloads, the desktop, sticky note apps, and random documents. Context-switching is slow because these materials are hard to find and never organized by task.
 
 ## Solution
 
-A lightweight desktop app that acts as temporary local storage for files. Users can quickly place files into the shelf, use them in another app or website, and let them auto-delete after a short period.
+A lightweight desktop workspace utility that opens instantly and lets users organize active task materials in tabs. Each tab is a mini workspace: you drag files in, jot notes, and sketch ideas — all in one place, all local, all persisted until you decide to clear it.
 
 ## User value
 
-* Faster file movement between apps
-* Less desktop and downloads clutter
-* No need to manually clean up temporary files
-* No friction from signup or cloud setup
+- Task materials stay together and in context
+- Fast to open, fast to use — no login, no loading, no cloud
+- Files are real copies in app-managed storage; no accidental originals deleted
+- Notes and sketches are always one click away
+- Tabs let users switch between tasks without losing context
 
 ## Audience
 
-General productivity users, especially students, office workers, and designers.
+- Knowledge workers managing multiple active tasks or projects
+- Designers keeping reference files, notes, and rough ideas together per task
+- Students organizing materials per assignment or subject
+- Anyone who wants a lightweight scratchpad that stays open and organized
 
 ## Primary use cases
 
-* Hold a screenshot before uploading it into a website
-* Keep a downloaded PDF temporarily before attaching it elsewhere
-* Move an image between apps without creating permanent mess
-* Keep short-lived assets available during a work session
+- Drag screenshots and reference files into a tab while working on a project
+- Write quick notes alongside the files they relate to
+- Sketch a rough wireframe or diagram without opening a heavy tool
+- Switch tabs to jump between two active tasks
+- Remove or clear a tab when the task is done
 
 ## v1 success criteria
 
-* Users can launch the app quickly
-* Users can add and remove common files easily
-* Users understand when files will expire
-* Users can reuse files by dragging them back out
-* Files auto-delete reliably after expiry
+- Users can create and name tabs
+- Users can drag files into the active tab; files persist across restarts
+- Users can write and edit notes per tab
+- Users can sketch and save sketches per tab
+- Users can remove a file from the app, or permanently delete it from disk
+- Users can clear all content from a tab with a confirmation step
+- App opens instantly via tray or global shortcut
+- No network access, no account, no external dependencies
 
 ## Requirements
 
 ### Functional
 
-* Tray-based launch
-* Global shortcut
-* Import by drag/drop
-* Import by paste
-* Import by file picker
-* Local file copy into managed temp directory
-* List of active temp items
-* File metadata display
-* Expiry timer display
-* Auto-expiry cleanup
-* Open file
-* Reveal file location
-* Drag-out export
-* Basic search
+- Tray-based launch
+- Global shortcut to toggle panel
+- Tabbed workspace: default tab + user-created tabs
+- Tab naming (max 20 characters) with color selection
+- Files section per tab: drag-and-drop import, open with default app, remove from box, delete from computer
+- Notes section per tab: multiple note cards, create/edit/collapse/delete
+- Sketches section per tab: multiple sketch cards, canvas editor with pen/eraser/clear/brush size, collapse/delete
+- Clear-tab action with confirmation
+- Settings: light/dark theme, file display preferences (show size, show timestamp), keybind display
+- State persists across restarts (localStorage)
 
 ### Non-functional
 
-* Lightweight runtime
-* No backend
-* Local-only storage
-* Fast startup
-* Minimal memory usage
-* Stable file lifecycle behavior
+- Lightweight runtime (Tauri, not Electron)
+- No backend
+- Local-only storage
+- Fast startup
+- Minimal memory footprint
 
-## Out of scope
+## Out of scope (current version)
 
-* Cloud storage
-* File syncing
-* Team collaboration
-* Shared links
-* Accounts
-* In-browser extension workflows
-* Full OS integration
+- Cloud storage or sync
+- Accounts or authentication
+- Clipboard paste import
+- File picker import (drag-drop only for now)
+- Drag-file-out to other apps (architecture preserves stored paths; can be added later)
+- OS context menu integration
+- Screenshot capture
+- Automatic deletion or expiry of any kind
+- Section layout customization (state structure supports it; UI not yet built)
+- Cross-device or team features

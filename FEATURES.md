@@ -1,38 +1,76 @@
 # FEATURES.md
 
-## Must-have for prototype
+## Implemented
 
-* Tray icon
-* Global shortcut to open panel
-* Floating shelf UI
-* Drag-and-drop import
-* Clipboard paste import
-* File picker import
-* Local managed temp directory
-* File list UI
-* Item metadata
-* Expiry countdown or relative expiry label
-* Auto-delete expired items
-* Open file
-* Reveal in folder
-* Search/filter
-* Drag-out support
+- Tray icon (click to toggle panel)
+- Global shortcut (Ctrl+Shift+V) to toggle panel
+- Floating panel window (drag region in header)
+- Light/dark theme toggle
+- Persisted workspace state (Zustand + localStorage, key: `vanish-box-workspace`)
 
-## Nice-to-have after prototype
+## In progress / planned (workspace pivot)
 
-* Pin item to prevent expiry
-* Recently expired recovery bucket
-* Better media previews
-* Batch actions
-* Sort by expiry or type
-* User settings panel
-* Start on login toggle
-* Per-item custom expiry
+### Tabs
+- Default tab on first launch
+- Create tab with name (max 20 chars) and color
+- Rename tab (double-click)
+- Switch tabs
+- Tab color indicator (left border)
+- Clear-tab action with confirmation dialog
 
-## Later-stage ideas
+### Files per tab
+- Drag-and-drop import (copies file to `<appData>/files/`)
+- File card: filename, optional size, optional timestamp
+- Open with default OS app (click filename)
+- Remove from Vanish Box (× button — removes card, does NOT delete file)
+- Delete from computer (🗑 button — confirmation dialog, deletes stored copy)
+- Drag-over visual feedback on drop zone
+- Graceful handling of missing/moved files
 
-* OS context menu integration
-* Screenshot-to-shelf hotkey
-* Smarter detection of temporary intent
-* Rules for auto-importing from Downloads
-* Cross-device relay
+### Notes per tab
+- Multiple note cards per tab
+- Create note (+ Add note button)
+- Click card to open inline editor (title + body)
+- Body preview (first 120 chars) in card when not collapsed
+- Collapse/expand toggle
+- Delete note (× button)
+
+### Sketches per tab
+- Multiple sketch cards per tab
+- Create sketch (+ Add sketch button)
+- Canvas editor: pen tool, eraser tool, brush size slider, clear canvas
+- Saves as base64 PNG (stored in workspace state)
+- Thumbnail shown in card when not collapsed
+- Collapse/expand toggle
+- Delete sketch (× button)
+
+### Settings
+- Light/dark theme
+- Show/hide file size
+- Show/hide file timestamp
+- Keybind display (read-only in UI)
+
+## Nice-to-have (future)
+
+- Drag-file-out to other apps (stored paths are accessible; requires Tauri drag-out API integration)
+- File picker import
+- Clipboard paste import
+- Section layout customization (list vs grid — state structure already supports it)
+- Tab reordering
+- Tab deletion with confirmation
+- Pinned or starred notes/sketches
+- Sketch title rename in-place
+- Note search/filter
+- Media preview thumbnails for images
+- Touch/stylus support in sketch editor
+- Per-tab color themes
+
+## Explicitly out of scope
+
+- Auto-expiry or timed deletion of any kind
+- Cloud storage or sync
+- Accounts or authentication
+- OS context menu integration
+- Cross-device features
+- AI features
+- Backend services
