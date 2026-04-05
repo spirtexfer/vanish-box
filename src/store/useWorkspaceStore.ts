@@ -174,13 +174,14 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
           })),
 
         addNote: (tabId) => {
+          const now = Date.now()
           const note: NoteCard = {
             id: crypto.randomUUID(),
             title: 'New note',
             body: '',
             collapsed: false,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
+            createdAt: now,
+            updatedAt: now,
           }
           set((state) => ({
             tabs: state.tabs.map((t) =>
@@ -215,13 +216,14 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
           })),
 
         addSketch: (tabId) => {
+          const now = Date.now()
           const sketch: SketchCard = {
             id: crypto.randomUUID(),
             title: 'New sketch',
             dataUrl: null,
             collapsed: false,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
+            createdAt: now,
+            updatedAt: now,
           }
           set((state) => ({
             tabs: state.tabs.map((t) =>

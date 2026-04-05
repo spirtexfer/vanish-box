@@ -158,10 +158,12 @@ describe('addNote / updateNote / removeNote', () => {
     const tabId = result.current.tabs[0].id
     act(() => { result.current.addNote(tabId) })
     const noteId = result.current.tabs[0].notes[0].id
+    const beforeUpdate = result.current.tabs[0].notes[0].updatedAt
     act(() => { result.current.updateNote(tabId, noteId, { title: 'Hello', body: 'World' }) })
     const note = result.current.tabs[0].notes[0]
     expect(note.title).toBe('Hello')
     expect(note.body).toBe('World')
+    expect(note.updatedAt).toBeGreaterThanOrEqual(beforeUpdate)
   })
 
   it('removeNote removes the correct note', () => {
@@ -190,9 +192,11 @@ describe('addSketch / updateSketch / removeSketch', () => {
     const tabId = result.current.tabs[0].id
     act(() => { result.current.addSketch(tabId) })
     const sketchId = result.current.tabs[0].sketches[0].id
+    const beforeUpdate = result.current.tabs[0].sketches[0].updatedAt
     act(() => { result.current.updateSketch(tabId, sketchId, { title: 'My sketch', dataUrl: 'data:...' }) })
     expect(result.current.tabs[0].sketches[0].title).toBe('My sketch')
     expect(result.current.tabs[0].sketches[0].dataUrl).toBe('data:...')
+    expect(result.current.tabs[0].sketches[0].updatedAt).toBeGreaterThanOrEqual(beforeUpdate)
   })
 
   it('removeSketch removes the correct sketch', () => {
