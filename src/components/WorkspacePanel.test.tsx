@@ -1,7 +1,17 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { WorkspacePanel } from './WorkspacePanel'
 import { useWorkspaceStore } from '../store/useWorkspaceStore'
+
+vi.mock('@tauri-apps/api/window', () => ({
+  getCurrentWindow: vi.fn(() => ({
+    onDragDropEvent: vi.fn(() => Promise.resolve(() => undefined)),
+  })),
+}))
+
+vi.mock('@tauri-apps/api/core', () => ({
+  invoke: vi.fn(),
+}))
 
 beforeEach(() => {
   useWorkspaceStore.getState().reset()

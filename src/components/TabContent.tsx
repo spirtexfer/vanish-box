@@ -1,5 +1,6 @@
 import { Tab } from '../store/useWorkspaceStore'
 import { ColorTokens } from '../theme'
+import { FilesSection } from './FilesSection'
 
 interface TabContentProps {
   tab: Tab
@@ -11,11 +12,6 @@ export function TabContent({ tab, colors }: TabContentProps) {
     files: 'Files',
     notes: 'Notes',
     sketches: 'Sketches',
-  }
-  const emptyMessage: Record<string, string> = {
-    files: 'Drop files here',
-    notes: 'No notes yet',
-    sketches: 'No sketches yet',
   }
 
   return (
@@ -43,23 +39,28 @@ export function TabContent({ tab, colors }: TabContentProps) {
           >
             {sectionLabel[section.type]}
           </h3>
-          <div
-            style={{
-              background: colors.bgSecondary,
-              border: `1px solid ${colors.border}`,
-              borderRadius: '8px',
-              padding: '12px',
-              fontSize: '12px',
-              color: colors.textMuted,
-              textAlign: 'center',
-              minHeight: '48px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {emptyMessage[section.type]}
-          </div>
+          {section.type === 'files' ? (
+            <FilesSection tabId={tab.id} colors={colors} />
+          ) : (
+            <div
+              style={{
+                background: colors.bgSecondary,
+                border: `1px solid ${colors.border}`,
+                borderRadius: '8px',
+                padding: '12px',
+                fontSize: '12px',
+                color: colors.textMuted,
+                textAlign: 'center',
+                minHeight: '48px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {section.type === 'notes' && 'No notes yet'}
+              {section.type === 'sketches' && 'No sketches yet'}
+            </div>
+          )}
         </section>
       ))}
     </div>
