@@ -90,4 +90,38 @@ describe('TabBar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'new tab' }))
     expect(screen.getAllByRole('button', { name: /^color-/ })).toHaveLength(6)
   })
+
+  it('does not show delete button when only one tab', () => {
+    render(<TabBar colors={COLORS.light} />)
+    expect(screen.queryByRole('button', { name: 'delete tab' })).toBeNull()
+  })
+
+  it('shows delete button on each tab when there are multiple tabs', () => {
+    useWorkspaceStore.getState().createTab('Second', 'rose')
+    render(<TabBar colors={COLORS.light} />)
+    expect(screen.getAllByRole('button', { name: 'delete tab' })).toHaveLength(2)
+  })
+
+  it('clicking delete tab button shows confirmation dialog', () => {
+    useWorkspaceStore.getState().createTab('Second', 'rose')
+    render(<TabBar colors={COLORS.light} />)
+    fireEvent.click(screen.getAllByRole('button', { name: 'delete tab' })[1])
+    expect(screen.getByRole('button', { name: 'confirm delete tab' })).toBeTruthy()
+  })
+
+  it('confirming delete removes the tab from the store', () => {
+    useWorkspaceStore.getState().createTab('Second', 'rose')
+    render(<TabBar colors={COLORS.light} />)
+    fireEvent.click(screen.getAllByRole('button', { name: 'delete tab' })[1])
+    fireEvent.click(screen.getByRole('button', { name: 'confirm delete tab' }))
+    expect(useWorkspaceStore.getState().tabs).toHaveLength(1)
+  })
+
+  it('cancelling the delete dialog leaves the tab in place', () => {
+    useWorkspaceStore.getState().createTab('Second', 'rose')
+    render(<TabBar colors={COLORS.light} />)
+    fireEvent.click(screen.getAllByRole('button', { name: 'delete tab' })[1])
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(useWorkspaceStore.getState().tabs).toHaveLength(2)
+  })
 })

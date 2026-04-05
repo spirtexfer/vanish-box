@@ -90,6 +90,45 @@ describe('setActiveTab', () => {
   })
 })
 
+describe('deleteTab', () => {
+  it('removes the specified tab', () => {
+    const { result } = renderHook(() => useWorkspaceStore())
+    act(() => { result.current.createTab('Extra', 'rose') })
+    const extraId = result.current.tabs[1].id
+    act(() => { result.current.deleteTab(extraId) })
+    expect(result.current.tabs).toHaveLength(1)
+    expect(result.current.tabs[0].name).toBe('Workspace')
+  })
+
+  it('does not delete the last remaining tab', () => {
+    const { result } = renderHook(() => useWorkspaceStore())
+    const id = result.current.tabs[0].id
+    act(() => { result.current.deleteTab(id) })
+    expect(result.current.tabs).toHaveLength(1)
+  })
+
+  it('switches to another tab when deleting the active tab', () => {
+    const { result } = renderHook(() => useWorkspaceStore())
+    act(() => { result.current.createTab('B', 'green') })
+    const bId = result.current.tabs[1].id
+    act(() => { result.current.setActiveTab(bId) })
+    act(() => { result.current.deleteTab(bId) })
+    expect(result.current.activeTabId).toBe(result.current.tabs[0].id)
+  })
+
+  it('keeps the active tab unchanged when deleting a non-active tab', () => {
+    const { result } = renderHook(() => useWorkspaceStore())
+    act(() => { result.current.createTab('B', 'green') })
+    const firstId = result.current.tabs[0].id
+    const bId = result.current.tabs[1].id
+    act(() => { result.current.setActiveTab(bId) })
+    act(() => { result.current.deleteTab(firstId) })
+    expect(result.current.activeTabId).toBe(bId)
+    expect(result.current.tabs).toHaveLength(1)
+    expect(result.current.tabs[0].name).toBe('B')
+  })
+})
+
 describe('clearTab', () => {
   it('empties files, notes, and sketches of the target tab', () => {
     const { result } = renderHook(() => useWorkspaceStore())

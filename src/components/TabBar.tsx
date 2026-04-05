@@ -8,12 +8,13 @@ interface TabBarProps {
 }
 
 export function TabBar({ colors }: TabBarProps) {
-  const { tabs, activeTabId, setActiveTab, createTab, updateTab } = useWorkspaceStore()
+  const { tabs, activeTabId, setActiveTab, createTab, updateTab, deleteTab } = useWorkspaceStore()
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
   const [newColor, setNewColor] = useState<TabColor>('blue')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   function submitCreate() {
     const name = newName.trim() || 'Workspace'
@@ -48,6 +49,67 @@ export function TabBar({ colors }: TabBarProps) {
         flexShrink: 0,
       }}
     >
+      {confirmDeleteId && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 250,
+          }}
+        >
+          <div
+            style={{
+              background: colors.bg,
+              border: `1px solid ${colors.border}`,
+              borderRadius: '10px',
+              padding: '20px',
+              maxWidth: '280px',
+              textAlign: 'center',
+            }}
+          >
+            <p style={{ color: colors.text, fontSize: '13px', margin: '0 0 16px 0' }}>
+              Delete this tab and all its content? This cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                style={{
+                  padding: '6px 14px',
+                  cursor: 'pointer',
+                  borderRadius: '6px',
+                  border: `1px solid ${colors.border}`,
+                  background: colors.bg,
+                  color: colors.text,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                aria-label="confirm delete tab"
+                onClick={() => {
+                  deleteTab(confirmDeleteId)
+                  setConfirmDeleteId(null)
+                }}
+                style={{
+                  padding: '6px 14px',
+                  cursor: 'pointer',
+                  borderRadius: '6px',
+                  background: '#ef4444',
+                  color: '#fff',
+                  border: 'none',
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {tabs.map((tab) => (
         <div
           key={tab.id}
@@ -61,10 +123,9 @@ export function TabBar({ colors }: TabBarProps) {
             borderRadius: '6px',
             cursor: 'pointer',
             background: tab.id === activeTabId ? colors.bgSecondary : 'transparent',
-            border:
-              tab.id === activeTabId
-                ? `1px solid ${colors.border}`
-                : '1px solid transparent',
+            borderTop: tab.id === activeTabId ? `1px solid ${colors.border}` : '1px solid transparent',
+            borderRight: tab.id === activeTabId ? `1px solid ${colors.border}` : '1px solid transparent',
+            borderBottom: tab.id === activeTabId ? `1px solid ${colors.border}` : '1px solid transparent',
             borderLeft: `3px solid ${TAB_COLOR_VALUES[tab.color]}`,
             maxWidth: '140px',
             flexShrink: 0,
@@ -103,6 +164,27 @@ export function TabBar({ colors }: TabBarProps) {
             >
               {tab.name}
             </span>
+          )}
+          {tabs.length > 1 && (
+            <button
+              aria-label="delete tab"
+              onClick={(e) => {
+                e.stopPropagation()
+                setConfirmDeleteId(tab.id)
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: colors.textMuted,
+                fontSize: '11px',
+                lineHeight: 1,
+                padding: '0 1px',
+                flexShrink: 0,
+              }}
+            >
+              ×
+            </button>
           )}
         </div>
       ))}

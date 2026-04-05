@@ -38,13 +38,15 @@ export function FilesSection({ tabId, colors }: FilesSectionProps) {
 
   async function confirmDelete() {
     if (!deleteConfirm) return
+    const { fileId, storedPath } = deleteConfirm
+    setDeleteConfirm(null)
     try {
-      await invoke('delete_file', { path: deleteConfirm.storedPath })
+      await invoke('delete_file', { path: storedPath })
+      removeFile(tabId, fileId)
     } catch (e) {
       console.error('[VanishBox] Failed to delete file:', e)
+      alert('Could not delete the file from disk. It may have already been removed.')
     }
-    removeFile(tabId, deleteConfirm.fileId)
-    setDeleteConfirm(null)
   }
 
   useEffect(() => {

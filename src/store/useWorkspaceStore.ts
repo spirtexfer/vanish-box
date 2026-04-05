@@ -93,6 +93,7 @@ interface WorkspaceStore {
   createTab: (name: string, color: TabColor) => void
   updateTab: (id: string, patch: Partial<Pick<Tab, 'name' | 'color'>>) => void
   setActiveTab: (id: string) => void
+  deleteTab: (id: string) => void
   clearTab: (id: string) => void
 
   addFiles: (tabId: string, files: WorkspaceFile[]) => void
@@ -149,6 +150,17 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
           })),
 
         setActiveTab: (id) => set({ activeTabId: id }),
+
+        deleteTab: (id) =>
+          set((state) => {
+            if (state.tabs.length <= 1) return state
+            const newTabs = state.tabs.filter((t) => t.id !== id)
+            const newActiveId =
+              state.activeTabId === id
+                ? newTabs[newTabs.length - 1].id
+                : state.activeTabId
+            return { tabs: newTabs, activeTabId: newActiveId }
+          }),
 
         clearTab: (id) =>
           set((state) => ({

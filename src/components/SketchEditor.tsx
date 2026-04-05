@@ -32,7 +32,9 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
   function getPos(e: React.MouseEvent<HTMLCanvasElement>) {
     const canvas = canvasRef.current!
     const rect = canvas.getBoundingClientRect()
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top }
+    const scaleX = canvas.width / rect.width
+    const scaleY = canvas.height / rect.height
+    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY }
   }
 
   function onMouseDown(e: React.MouseEvent<HTMLCanvasElement>) {
@@ -94,6 +96,9 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
           display: 'flex',
           flexDirection: 'column',
           gap: '10px',
+          maxWidth: 'calc(100vw - 32px)',
+          maxHeight: 'calc(100vh - 32px)',
+          overflowY: 'auto',
         }}
       >
         <div
@@ -191,6 +196,8 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
             cursor: tool === 'eraser' ? 'cell' : 'crosshair',
             background: '#ffffff',
             display: 'block',
+            maxWidth: '100%',
+            height: 'auto',
           }}
         />
       </div>
