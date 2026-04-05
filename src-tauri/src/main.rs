@@ -10,8 +10,9 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
-            commands::get_file_infos,
+            commands::copy_file,
             commands::open_file,
+            commands::delete_file,
         ])
         .setup(|app| {
             tray::setup_tray(app)?;

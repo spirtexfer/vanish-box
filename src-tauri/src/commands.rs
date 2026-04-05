@@ -1,29 +1,57 @@
 use serde::Serialize;
 
 #[derive(Serialize)]
-pub struct FileInfo {
-    pub name: String,
+pub struct CopiedFileInfo {
+    pub id: String,
+    pub original_name: String,
+    pub stored_path: String,
     pub size: u64,
-    pub path: String,
 }
 
+/// Copy a file from `source` into the app's managed files directory.
+/// Returns metadata about the copied file including its new path.
 #[tauri::command]
-pub fn get_file_infos(paths: Vec<String>) -> Vec<FileInfo> {
-    paths
-        .iter()
-        .filter_map(|path| {
-            let p = std::path::Path::new(path);
-            let name = p.file_name()?.to_string_lossy().to_string();
-            let size = std::fs::metadata(p).map(|m| m.len()).unwrap_or(0);
-            Some(FileInfo {
-                name,
-                size,
-                path: path.clone(),
-            })
-        })
-        .collect()
+pub fn copy_file(
+    app_handle: tauri::AppHandle,
+    source: String,
+) -> Result<CopiedFileInfo, String> {
+    use tauri::Manager;
+
+    let data_dir = app_handle
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?;
+
+    let files_dir = data_dir.join("files");
+    std::fs::create_dir_all(&files_dir).map_err(|e| e.to_string())?;
+
+    let source_path = std::path::Path::new(&source);
+    let original_name = source_path
+        .file_name()
+        .ok_or_else(|| "No filename in path".to_string())?
+        .to_string_lossy()
+        .to_string();
+
+    // Unique stored name: timestamp_ms + original name
+    let ts = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis();
+    let stored_name = format!("{}_{}", ts, original_name);
+    let dest = files_dir.join(&stored_name);
+
+    std::fs::copy(source_path, &dest).map_err(|e| e.to_string())?;
+    let size = std::fs::metadata(&dest).map(|m| m.len()).unwrap_or(0);
+
+    Ok(CopiedFileInfo {
+        id: stored_name,
+        original_name,
+        stored_path: dest.to_string_lossy().to_string(),
+        size,
+    })
 }
 
+/// Open a file with the default OS application.
 #[tauri::command]
 pub fn open_file(path: String) -> Result<(), String> {
     #[cfg(target_os = "windows")]
@@ -48,4 +76,10 @@ pub fn open_file(path: String) -> Result<(), String> {
             .map_err(|e| e.to_string())?;
     }
     Ok(())
+}
+
+/// Permanently delete a file from the app's managed storage.
+#[tauri::command]
+pub fn delete_file(path: String) -> Result<(), String> {
+    std::fs::remove_file(&path).map_err(|e| e.to_string())
 }
