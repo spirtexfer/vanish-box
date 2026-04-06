@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useWorkspaceStore, migrateStore } from './useWorkspaceStore'
-import type { TabColor } from './useWorkspaceStore'
+import type { TabColor, WorkspaceFile } from './useWorkspaceStore'
 
 beforeEach(() => {
   useWorkspaceStore.getState().reset()
@@ -189,6 +189,48 @@ describe('addFiles / removeFile', () => {
     act(() => { result.current.removeFile(tabId, 'f1') })
     expect(result.current.tabs[0].files).toHaveLength(1)
     expect(result.current.tabs[0].files[0].id).toBe('f2')
+  })
+})
+
+describe('moveFile', () => {
+  function makeFile(id: string): WorkspaceFile {
+    return { id, originalName: `${id}.txt`, storedPath: `/${id}`, sourcePath: `/orig/${id}`, size: 1, addedAt: 0 }
+  }
+
+  it('moves a file up by swapping with the previous element', () => {
+    const { result } = renderHook(() => useWorkspaceStore())
+    const tabId = result.current.tabs[0].id
+    act(() => { result.current.addFiles(tabId, [makeFile('a'), makeFile('b'), makeFile('c')]) })
+    act(() => { result.current.moveFile(tabId, 'b', 'up') })
+    const ids = result.current.tabs[0].files.map((f) => f.id)
+    expect(ids).toEqual(['b', 'a', 'c'])
+  })
+
+  it('moves a file down by swapping with the next element', () => {
+    const { result } = renderHook(() => useWorkspaceStore())
+    const tabId = result.current.tabs[0].id
+    act(() => { result.current.addFiles(tabId, [makeFile('a'), makeFile('b'), makeFile('c')]) })
+    act(() => { result.current.moveFile(tabId, 'b', 'down') })
+    const ids = result.current.tabs[0].files.map((f) => f.id)
+    expect(ids).toEqual(['a', 'c', 'b'])
+  })
+
+  it('moving the first file up is a no-op', () => {
+    const { result } = renderHook(() => useWorkspaceStore())
+    const tabId = result.current.tabs[0].id
+    act(() => { result.current.addFiles(tabId, [makeFile('a'), makeFile('b')]) })
+    act(() => { result.current.moveFile(tabId, 'a', 'up') })
+    const ids = result.current.tabs[0].files.map((f) => f.id)
+    expect(ids).toEqual(['a', 'b'])
+  })
+
+  it('moving the last file down is a no-op', () => {
+    const { result } = renderHook(() => useWorkspaceStore())
+    const tabId = result.current.tabs[0].id
+    act(() => { result.current.addFiles(tabId, [makeFile('a'), makeFile('b')]) })
+    act(() => { result.current.moveFile(tabId, 'b', 'down') })
+    const ids = result.current.tabs[0].files.map((f) => f.id)
+    expect(ids).toEqual(['a', 'b'])
   })
 })
 

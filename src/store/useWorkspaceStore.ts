@@ -109,6 +109,7 @@ interface WorkspaceStore {
 
   addFiles: (tabId: string, files: WorkspaceFile[]) => void
   removeFile: (tabId: string, fileId: string) => void
+  moveFile: (tabId: string, fileId: string, direction: 'up' | 'down') => void
 
   addNote: (tabId: string) => void
   updateNote: (tabId: string, noteId: string, patch: Partial<Pick<NoteCard, 'title' | 'body' | 'collapsed'>>) => void
@@ -215,6 +216,20 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
                 ? { ...t, files: t.files.filter((f) => f.id !== fileId) }
                 : t
             ),
+          })),
+
+        moveFile: (tabId, fileId, direction) =>
+          set((state) => ({
+            tabs: state.tabs.map((t) => {
+              if (t.id !== tabId) return t
+              const files = [...t.files]
+              const idx = files.findIndex((f) => f.id === fileId)
+              if (idx === -1) return t
+              const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+              if (swapIdx < 0 || swapIdx >= files.length) return t
+              ;[files[idx], files[swapIdx]] = [files[swapIdx], files[idx]]
+              return { ...t, files }
+            }),
           })),
 
         addNote: (tabId) => {
