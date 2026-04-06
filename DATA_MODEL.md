@@ -23,24 +23,25 @@ interface Tab {
   id: string           // crypto.randomUUID()
   name: string         // max TAB_NAME_MAX_LEN (20) characters
   color: TabColor      // one of: 'slate' | 'blue' | 'purple' | 'green' | 'amber' | 'rose'
-  sections: SectionConfig[]  // defines section order and layout; default: files → notes → sketches
+  sections: SectionConfig[]  // defines section order and layout; default: files → notes → sketches → links
   files: WorkspaceFile[]
   notes: NoteCard[]
   sketches: SketchCard[]
+  links: LinkItem[]
 }
 ```
 
 On first launch, a single default tab is created:
 - name: `'Workspace'`
 - color: `'blue'`
-- sections: default three sections in list layout
+- sections: default four sections in list layout (files, notes, sketches, links)
 
 ---
 
 ## SectionConfig
 
 ```typescript
-type SectionType   = 'files' | 'notes' | 'sketches'
+type SectionType   = 'files' | 'notes' | 'sketches' | 'links'
 type SectionLayout = 'list' | 'grid'
 
 interface SectionConfig {
@@ -49,7 +50,7 @@ interface SectionConfig {
 }
 ```
 
-The `sections` array on each tab controls which sections appear and in what order. Layout customization is not exposed in the UI in v1 but the state structure supports it without migration.
+The `sections` array on each tab controls which sections appear and in what order. Default order: files → notes → sketches → links. Layout customization is not exposed in the UI in v1 but the state structure supports it without migration.
 
 ---
 
@@ -60,16 +61,17 @@ interface WorkspaceFile {
   id: string           // stored filename (e.g. "1712312345678_photo.png") — unique within the app
   originalName: string // original filename before copy (e.g. "photo.png")
   storedPath: string   // absolute path to the copy in <appData>/files/
+  sourcePath: string   // absolute path to the original file at time of import
   size: number         // bytes
   addedAt: number      // Date.now() ms when the file was imported
 }
 ```
 
-Files are real copies on disk. `storedPath` is the authoritative location. `originalName` is for display only — the original file may no longer exist.
+Files are real copies on disk. `storedPath` is the app-managed copy. `sourcePath` is the original file location at import time (may no longer exist). `originalName` is for display only.
 
 **Remove vs delete:**
-- Remove (`onRemove`): deletes the `WorkspaceFile` record from the store. The file at `storedPath` is NOT deleted from disk.
-- Delete (`onDelete`): calls `delete_file(storedPath)` Tauri command, then removes the record. File is permanently gone from disk.
+- Remove (`onRemove`): deletes the `WorkspaceFile` record from the store only. The stored copy at `storedPath` is NOT deleted from disk.
+- Delete (`onDelete`): calls `trash_file(sourcePath, storedPath)` Tauri command — moves the original source file to the system trash AND permanently deletes the stored copy. Both operations are attempted; if trashing the original fails (e.g. it was already moved), an error is shown and the card is NOT removed from the UI.
 
 ---
 
@@ -107,6 +109,21 @@ Sketches are stored as base64 PNG strings in the workspace state. Large or numer
 
 ---
 
+## LinkItem
+
+```typescript
+interface LinkItem {
+  id: string           // crypto.randomUUID()
+  title: string        // display title; defaults to URL hostname if empty
+  url: string          // full URL string
+  createdAt: number    // Date.now() ms
+}
+```
+
+Links are stored entirely in the workspace state (no files on disk). Clicking a link invokes the `open_url` Tauri command, which opens the URL in the system default browser.
+
+---
+
 ## Settings
 
 ```typescript
@@ -114,7 +131,7 @@ type Theme = 'light' | 'dark'
 
 interface Settings {
   theme: Theme           // UI color scheme
-  keybind: string        // global shortcut (display only in UI; hardcoded in Rust)
+  keybind: string        // global shortcut; editable via settings panel; persisted to <appData>/keybind.txt
   showFileSize: boolean  // show file size in FileCard
   showFileTimestamp: boolean  // show addedAt time in FileCard
 }
@@ -163,6 +180,7 @@ interface CopiedFileInfo {
   id: string            // stored filename used as WorkspaceFile.id
   original_name: string // original filename (snake_case from Rust serialization)
   stored_path: string   // absolute path to the copy
+  source_path: string   // original file path at time of drag-drop
   size: number          // bytes
 }
 ```

@@ -22,7 +22,9 @@
 
 **Choice:** Separate × (remove from box) and 🗑 (delete from computer) actions on each file card.
 
-**Reason:** Removing a file from the workspace and permanently deleting it from disk are two different user intentions. Conflating them would cause accidental data loss. The 🗑 action requires a confirmation dialog.
+**Reason:** Removing a file from the workspace and deleting it from disk are two different user intentions. Conflating them would cause accidental data loss. The 🗑 action requires a confirmation dialog.
+
+**Behavior of 🗑 (delete):** Calls `trash_file(sourcePath, storedPath)` — moves the original source file to the system trash AND permanently deletes the stored copy from `<appData>/files/`. If trashing the original fails (it may have already been moved or deleted), an error is shown and the card is not removed.
 
 ---
 

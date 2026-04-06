@@ -8,7 +8,8 @@ Vanish Box opens instantly from a tray icon or global shortcut. Inside, you orga
 
 - **Files** — drag files in; they are copied into app-managed storage and persist until you remove them
 - **Notes** — create multiple note cards per tab; click to open in a lightweight inline editor
-- **Sketches** — create freehand sketch cards per tab; click to open a canvas editor with pen, eraser, and brush controls
+- **Sketches** — create freehand sketch cards per tab; click to open a canvas editor with pen, eraser, brush controls, undo/redo, and clear
+- **Links** — save named URLs per tab; click to open in the system browser
 
 There is no expiry, no auto-deletion, and no cloud. Files stay until you remove them or clear the tab.
 
@@ -25,22 +26,17 @@ There is no expiry, no auto-deletion, and no cloud. Files stay until you remove 
 
 ## Development
 
-Install dependencies from WSL (required for Linux binaries):
+Install dependencies and run Tauri commands from **PowerShell** (Windows), not WSL — the Tauri CLI binary requires Windows-native node_modules:
 
-```bash
+```powershell
 npm install
+npm run tauri dev
 ```
 
-Run the Vite dev server (no Tauri):
+Run the Vite dev server only (no Tauri, works from WSL):
 
 ```bash
 npm run dev
-```
-
-Run with full Tauri integration:
-
-```bash
-npx tauri dev
 ```
 
 Run tests:
@@ -53,27 +49,30 @@ npm test
 
 ```
 src/
-  store/useWorkspaceStore.ts   # All workspace state (tabs, files, notes, sketches, settings)
+  store/useWorkspaceStore.ts   # All workspace state (tabs, files, notes, sketches, links, settings)
   theme.ts                     # COLORS token object (light/dark) + TAB_COLOR_VALUES
   components/
-    WorkspacePanel.tsx         # Root layout
-    TabBar.tsx                 # Tab strip + create/rename tab
+    WorkspacePanel.tsx         # Root layout; owns clear-tab confirm + settings open state
+    TabBar.tsx                 # Tab strip + create/rename/delete tab
     TabContent.tsx             # Renders sections for the active tab
     FilesSection.tsx           # Drag-drop + file list per tab
-    FileCard.tsx               # File row: open / remove / delete
+    FileCard.tsx               # File row: open / reorder / remove / delete
     NotesSection.tsx           # Note cards + editor per tab
     NoteCard.tsx               # Collapsible note card
     NoteEditor.tsx             # Modal note editor
     SketchesSection.tsx        # Sketch cards per tab
     SketchCard.tsx             # Collapsible sketch card with thumbnail
-    SketchEditor.tsx           # Canvas sketch editor
-    SettingsPanel.tsx          # Bottom-sheet settings overlay
+    SketchEditor.tsx           # Canvas sketch editor with undo/redo and clear confirmation
+    LinksSection.tsx           # Link list + add/edit per tab
+    LinkCard.tsx               # Link row: open / edit / remove
+    LinkEditor.tsx             # Modal link editor (title + URL)
+    SettingsPanel.tsx          # Bottom-sheet settings overlay with keybind capture
 
 src-tauri/src/
   main.rs                      # Entry: tray, shortcut, invoke handler
-  commands.rs                  # copy_file, open_file, delete_file
+  commands.rs                  # copy_file, open_file, delete_file, trash_file, open_url, update_shortcut
   tray.rs                      # System tray setup
-  shortcut.rs                  # Global shortcut (Ctrl+Shift+V)
+  shortcut.rs                  # Global shortcut setup (reads keybind.txt on startup)
   window.rs                    # Toggle panel visibility
 ```
 

@@ -2,7 +2,7 @@
 
 ## Project overview
 
-Vanish Box is a fast local desktop workspace utility. Users organize active task materials into tabs. Each tab contains files, notes, and sketches.
+Vanish Box is a fast local desktop workspace utility. Users organize active task materials into tabs. Each tab contains files, notes, sketches, and links.
 
 ## Product name
 
@@ -10,7 +10,7 @@ Vanish Box
 
 ## Core promise
 
-A fast, local, no-account desktop app that acts as a personal workspace. Users open it instantly, organize files/notes/sketches into task-based tabs, and keep everything local.
+A fast, local, no-account desktop app that acts as a personal workspace. Users open it instantly, organize files, notes, sketches, and links into task-based tabs, and keep everything local.
 
 ## Product goals
 
@@ -36,16 +36,20 @@ A fast, local, no-account desktop app that acts as a personal workspace. Users o
 ## App structure
 
 * Tabbed workspace shell (`WorkspacePanel`)
-* Each tab has three sections: Files, Notes, Sketches
+* Each tab has four sections: Files, Notes, Sketches, Links
 * Section layout is configurable in state (list/grid) — UI customization is a future feature
-* Settings panel (gear icon): theme, file display preferences
+* Settings panel (gear icon): theme, file display preferences, editable global shortcut
 * Clear-tab confirmation before wiping tab content
+* Tab deletion with confirmation (cannot delete the last tab)
 
 ## Rust commands
 
 * `copy_file(source) → CopiedFileInfo` — copies file into `<appData>/files/`, returns metadata
 * `open_file(path)` — opens with default OS app
-* `delete_file(path)` — permanently removes from `<appData>/files/`
+* `delete_file(path)` — permanently removes a file from disk (internal use)
+* `trash_file(sourcePath, storedPath)` — moves original source file to system trash AND deletes stored copy; used by the 🗑 delete action
+* `open_url(url)` — opens a URL in the system default browser
+* `update_shortcut(keybind)` — re-registers the global shortcut and persists to `<appData>/keybind.txt`
 
 ## Engineering principles
 

@@ -98,7 +98,6 @@ Add freehand sketch cards with a canvas editor.
 - Drag-file-out support (stored paths are available; requires Tauri drag-out API)
 - File picker import
 - Clipboard paste import
-- Tab deletion with confirmation
 - Tab reordering
 - Section layout toggle (list/grid — state structure already supports it)
 - Touch/stylus support for sketch editor

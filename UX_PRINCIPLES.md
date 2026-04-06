@@ -32,10 +32,10 @@ Empty states are friendly and informative ("Drop files here", "No notes yet"). E
 
 ```
 Header (drag region)
-  App name | ⊘ Clear tab | ⚙ Settings | 🌙/☀️ Theme toggle
+  App name | ⊘ Clear tab | ⚙ Settings
 
 TabBar
-  [Tab 1] [Tab 2] [+]
+  [Tab 1] [×] [Tab 2] [×] [+]   (× hidden when only one tab)
 
 TabContent (active tab)
   FILES
@@ -43,8 +43,8 @@ TabContent (active tab)
     │ Drop files here               │  (empty state)
     └───────────────────────────────┘
     or
-    [filename  10:32  200 KB  ×  🗑]
-    [filename  10:33   1.0 MB  ×  🗑]
+    [filename  10:32  200 KB  ↑  ↓  ×  🗑]
+    [filename  10:33   1.0 MB  ↑  ↓  ×  🗑]
 
   NOTES
     [▼ Note title                  ×]
@@ -55,6 +55,10 @@ TabContent (active tab)
     [▼ Sketch title                ×]
       [thumbnail]
     [+ Add sketch]
+
+  LINKS
+    [Link title  url  ✎  ×]
+    [+ Add link]
 ```
 
 ## Tab design guidance
@@ -88,16 +92,24 @@ Each sketch card shows:
 - Thumbnail image when not collapsed
 - Click anywhere on the card (except buttons) → opens editor
 
+Each link card shows:
+- Title (clickable → opens URL in system browser)
+- URL (truncated, shown as secondary text)
+- ✎ button (edit link)
+- × button (remove link)
+
 ## Confirmation dialogs
 
 Used for:
-- Delete file from computer (irreversible, disk operation)
-- Clear tab (irreversible, removes all content)
+- Delete file from computer (irreversible disk operation — trashes original + deletes stored copy)
+- Clear tab (irreversible, removes all content from the tab)
+- Delete tab (irreversible, removes the tab and all its content)
 
 Not used for:
-- Remove file from box (reversible in the session by re-dragging; low risk)
+- Remove file from box (stored copy stays on disk; reversible by re-dragging)
 - Delete note (no disk impact)
 - Delete sketch (no disk impact)
+- Remove link (no disk impact)
 
 ## Settings panel
 
@@ -105,6 +117,6 @@ Bottom-sheet overlay. Opens on ⚙. Closes on backdrop click. Contains:
 - Dark mode toggle
 - Show file size toggle
 - Show file timestamp toggle
-- Keybind display (read-only)
+- Global shortcut field (click-to-capture: click the field, press a key combination; updates immediately and persists across restarts)
 
 Settings are immediate — no "Apply" or "Save" button needed.

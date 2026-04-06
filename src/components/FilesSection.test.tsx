@@ -46,6 +46,7 @@ describe('FilesSection', () => {
       id: '123_photo.png',
       original_name: 'photo.png',
       stored_path: '/app/files/123_photo.png',
+      source_path: '/source/photo.png',
       size: 204800,
     })
 
@@ -64,6 +65,7 @@ describe('FilesSection', () => {
       id: 'ts_a.txt',
       original_name: 'a.txt',
       stored_path: '/app/files/ts_a.txt',
+      source_path: '/src/a.txt',
       size: 100,
     })
 
@@ -82,7 +84,7 @@ describe('FilesSection', () => {
 
   it('does not crash if copy_file fails for some files', async () => {
     mockInvoke
-      .mockResolvedValueOnce({ id: 'ts_ok.txt', original_name: 'ok.txt', stored_path: '/app/ok.txt', size: 10 })
+      .mockResolvedValueOnce({ id: 'ts_ok.txt', original_name: 'ok.txt', stored_path: '/app/ok.txt', source_path: '/src/ok.txt', size: 10 })
       .mockRejectedValueOnce(new Error('permission denied'))
 
     render(<FilesSection tabId={getTabId()} colors={COLORS.light} />)
@@ -101,6 +103,7 @@ describe('FilesSection', () => {
       id: 'ts_img.png',
       original_name: 'img.png',
       stored_path: '/app/img.png',
+      source_path: '/src/img.png',
       size: 512,
     })
 
@@ -119,10 +122,10 @@ describe('FilesSection', () => {
     expect(screen.getByRole('button', { name: /Cancel/ })).toBeTruthy()
   })
 
-  it('confirming delete calls delete_file and removes file from store', async () => {
+  it('confirming delete calls trash_file with sourcePath and storedPath and removes file from store', async () => {
     mockInvoke
-      .mockResolvedValueOnce({ id: 'ts_doc.pdf', original_name: 'doc.pdf', stored_path: '/app/doc.pdf', size: 1024 })
-      .mockResolvedValueOnce(undefined) // delete_file
+      .mockResolvedValueOnce({ id: 'ts_doc.pdf', original_name: 'doc.pdf', stored_path: '/app/doc.pdf', source_path: '/src/doc.pdf', size: 1024 })
+      .mockResolvedValueOnce(undefined) // trash_file
 
     render(<FilesSection tabId={getTabId()} colors={COLORS.light} />)
 
@@ -138,7 +141,7 @@ describe('FilesSection', () => {
       fireEvent.click(screen.getByRole('button', { name: /Delete$/ }))
     })
 
-    expect(mockInvoke).toHaveBeenCalledWith('delete_file', { path: '/app/doc.pdf' })
+    expect(mockInvoke).toHaveBeenCalledWith('trash_file', { sourcePath: '/src/doc.pdf', storedPath: '/app/doc.pdf' })
     expect(screen.queryByText('doc.pdf')).toBeNull()
   })
 
@@ -147,6 +150,7 @@ describe('FilesSection', () => {
       id: 'ts_keep.txt',
       original_name: 'keep.txt',
       stored_path: '/app/keep.txt',
+      source_path: '/src/keep.txt',
       size: 100,
     })
 
