@@ -5,6 +5,7 @@ pub struct CopiedFileInfo {
     pub id: String,
     pub original_name: String,
     pub stored_path: String,
+    pub source_path: String,
     pub size: u64,
 }
 
@@ -43,10 +44,12 @@ pub fn copy_file(
     std::fs::copy(source_path, &dest).map_err(|e| e.to_string())?;
     let size = std::fs::metadata(&dest).map(|m| m.len()).unwrap_or(0);
 
+    let stored_path = dest.to_string_lossy().to_string();
     Ok(CopiedFileInfo {
         id: stored_name,
         original_name,
-        stored_path: dest.to_string_lossy().to_string(),
+        stored_path,
+        source_path: source,
         size,
     })
 }
@@ -78,8 +81,43 @@ pub fn open_file(path: String) -> Result<(), String> {
     Ok(())
 }
 
+/// Open a URL in the system's default browser.
+#[tauri::command]
+pub fn open_url(url: String) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("cmd")
+            .args(["/c", "start", "", &url])
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(&url)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(&url)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 /// Permanently delete a file from the app's managed storage.
 #[tauri::command]
 pub fn delete_file(path: String) -> Result<(), String> {
     std::fs::remove_file(&path).map_err(|e| e.to_string())
+}
+
+/// Move the original source file to the system trash and delete the app's stored copy.
+#[tauri::command]
+pub fn trash_file(source_path: String, stored_path: String) -> Result<(), String> {
+    trash::delete(&source_path).map_err(|e| e.to_string())?;
+    let _ = std::fs::remove_file(&stored_path);
+    Ok(())
 }

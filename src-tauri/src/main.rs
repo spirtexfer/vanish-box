@@ -12,7 +12,9 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             commands::copy_file,
             commands::open_file,
+            commands::open_url,
             commands::delete_file,
+            commands::trash_file,
         ])
         .setup(|app| {
             tray::setup_tray(app)?;
