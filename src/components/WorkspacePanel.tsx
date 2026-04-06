@@ -148,21 +148,6 @@ export function WorkspacePanel() {
           >
             ⚙
           </button>
-          <button
-            onClick={() =>
-              updateSettings({ theme: settings.theme === 'light' ? 'dark' : 'light' })
-            }
-            aria-label="toggle theme"
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px',
-              color: colors.textMuted,
-            }}
-          >
-            {settings.theme === 'light' ? '🌙' : '☀️'}
-          </button>
         </div>
       </header>
 

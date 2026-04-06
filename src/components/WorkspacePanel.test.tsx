@@ -42,18 +42,6 @@ describe('WorkspacePanel', () => {
     expect(screen.getByText('No sketches yet')).toBeTruthy()
   })
 
-  it('theme toggle button is present', () => {
-    render(<WorkspacePanel />)
-    expect(screen.getByRole('button', { name: 'toggle theme' })).toBeTruthy()
-  })
-
-  it('clicking theme toggle switches theme in store', () => {
-    render(<WorkspacePanel />)
-    expect(useWorkspaceStore.getState().settings.theme).toBe('light')
-    fireEvent.click(screen.getByRole('button', { name: 'toggle theme' }))
-    expect(useWorkspaceStore.getState().settings.theme).toBe('dark')
-  })
-
   it('clear tab button is present', () => {
     render(<WorkspacePanel />)
     expect(screen.getByRole('button', { name: 'clear tab' })).toBeTruthy()
