@@ -9,6 +9,7 @@ interface CopiedFileInfo {
   id: string
   original_name: string
   stored_path: string
+  source_path: string
   size: number
 }
 
@@ -18,13 +19,14 @@ interface FilesSectionProps {
 }
 
 export function FilesSection({ tabId, colors }: FilesSectionProps) {
-  const { tabs, settings, addFiles, removeFile } = useWorkspaceStore()
+  const { tabs, settings, addFiles, removeFile, moveFile } = useWorkspaceStore()
   const tab = tabs.find((t) => t.id === tabId)
   const files = tab?.files ?? []
 
   const [isDraggingOver, setIsDraggingOver] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<{
     fileId: string
+    sourcePath: string
     storedPath: string
   } | null>(null)
 
@@ -38,14 +40,14 @@ export function FilesSection({ tabId, colors }: FilesSectionProps) {
 
   async function confirmDelete() {
     if (!deleteConfirm) return
-    const { fileId, storedPath } = deleteConfirm
+    const { fileId, sourcePath, storedPath } = deleteConfirm
     setDeleteConfirm(null)
     try {
-      await invoke('delete_file', { path: storedPath })
+      await invoke('trash_file', { sourcePath, storedPath })
       removeFile(tabId, fileId)
     } catch (e) {
-      console.error('[VanishBox] Failed to delete file:', e)
-      alert('Could not delete the file from disk. It may have already been removed.')
+      console.error('[VanishBox] Failed to trash file:', e)
+      alert('Could not move the file to trash. It may have already been removed.')
     }
   }
 
@@ -77,6 +79,7 @@ export function FilesSection({ tabId, colors }: FilesSectionProps) {
                 id: r.value.id,
                 originalName: r.value.original_name,
                 storedPath: r.value.stored_path,
+                sourcePath: r.value.source_path,
                 size: r.value.size,
                 addedAt: Date.now(),
               }))
@@ -201,7 +204,9 @@ export function FilesSection({ tabId, colors }: FilesSectionProps) {
                 colors={colors}
                 onOpen={handleOpen}
                 onRemove={(id) => removeFile(tabId, id)}
-                onDelete={(id, path) => setDeleteConfirm({ fileId: id, storedPath: path })}
+                onDelete={(id, sourcePath, storedPath) => setDeleteConfirm({ fileId: id, sourcePath, storedPath })}
+                onMoveUp={(id) => moveFile(tabId, id, 'up')}
+                onMoveDown={(id) => moveFile(tabId, id, 'down')}
               />
             ))}
           </ul>

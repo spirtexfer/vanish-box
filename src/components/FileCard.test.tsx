@@ -8,6 +8,7 @@ const baseFile: WorkspaceFile = {
   id: 'f1',
   originalName: 'photo.png',
   storedPath: '/app/files/123_photo.png',
+  sourcePath: '/original/photo.png',
   size: 204800,
   addedAt: new Date('2026-04-05T10:00:00').getTime(),
 }
@@ -29,6 +30,8 @@ describe('FileCard', () => {
         onOpen={vi.fn()}
         onRemove={vi.fn()}
         onDelete={vi.fn()}
+        onMoveUp={vi.fn()}
+        onMoveDown={vi.fn()}
       />
     )
     expect(screen.getByText('photo.png')).toBeTruthy()
@@ -43,6 +46,8 @@ describe('FileCard', () => {
         onOpen={vi.fn()}
         onRemove={vi.fn()}
         onDelete={vi.fn()}
+        onMoveUp={vi.fn()}
+        onMoveDown={vi.fn()}
       />
     )
     expect(screen.getByText('200.0 KB')).toBeTruthy()
@@ -57,6 +62,8 @@ describe('FileCard', () => {
         onOpen={vi.fn()}
         onRemove={vi.fn()}
         onDelete={vi.fn()}
+        onMoveUp={vi.fn()}
+        onMoveDown={vi.fn()}
       />
     )
     expect(screen.queryByText('200.0 KB')).toBeNull()
@@ -71,6 +78,8 @@ describe('FileCard', () => {
         onOpen={vi.fn()}
         onRemove={vi.fn()}
         onDelete={vi.fn()}
+        onMoveUp={vi.fn()}
+        onMoveDown={vi.fn()}
       />
     )
     expect(screen.getByTestId('file-timestamp')).toBeTruthy()
@@ -85,6 +94,8 @@ describe('FileCard', () => {
         onOpen={vi.fn()}
         onRemove={vi.fn()}
         onDelete={vi.fn()}
+        onMoveUp={vi.fn()}
+        onMoveDown={vi.fn()}
       />
     )
     expect(screen.queryByTestId('file-timestamp')).toBeNull()
@@ -100,6 +111,8 @@ describe('FileCard', () => {
         onOpen={onOpen}
         onRemove={vi.fn()}
         onDelete={vi.fn()}
+        onMoveUp={vi.fn()}
+        onMoveDown={vi.fn()}
       />
     )
     fireEvent.click(screen.getByText('photo.png'))
@@ -117,6 +130,8 @@ describe('FileCard', () => {
         onOpen={onOpen}
         onRemove={onRemove}
         onDelete={vi.fn()}
+        onMoveUp={vi.fn()}
+        onMoveDown={vi.fn()}
       />
     )
     fireEvent.click(screen.getByRole('button', { name: 'remove' }))
@@ -135,10 +150,48 @@ describe('FileCard', () => {
         onOpen={onOpen}
         onRemove={vi.fn()}
         onDelete={onDelete}
+        onMoveUp={vi.fn()}
+        onMoveDown={vi.fn()}
       />
     )
     fireEvent.click(screen.getByRole('button', { name: 'delete' }))
-    expect(onDelete).toHaveBeenCalledWith('f1', '/app/files/123_photo.png')
+    expect(onDelete).toHaveBeenCalledWith('f1', '/original/photo.png', '/app/files/123_photo.png')
     expect(onOpen).not.toHaveBeenCalled()
+  })
+
+  it('clicking ↑ calls onMoveUp with file id', () => {
+    const onMoveUp = vi.fn()
+    render(
+      <FileCard
+        file={baseFile}
+        settings={baseSettings}
+        colors={COLORS.light}
+        onOpen={vi.fn()}
+        onRemove={vi.fn()}
+        onDelete={vi.fn()}
+        onMoveUp={onMoveUp}
+        onMoveDown={vi.fn()}
+      />
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'move up' }))
+    expect(onMoveUp).toHaveBeenCalledWith('f1')
+  })
+
+  it('clicking ↓ calls onMoveDown with file id', () => {
+    const onMoveDown = vi.fn()
+    render(
+      <FileCard
+        file={baseFile}
+        settings={baseSettings}
+        colors={COLORS.light}
+        onOpen={vi.fn()}
+        onRemove={vi.fn()}
+        onDelete={vi.fn()}
+        onMoveUp={vi.fn()}
+        onMoveDown={onMoveDown}
+      />
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'move down' }))
+    expect(onMoveDown).toHaveBeenCalledWith('f1')
   })
 })

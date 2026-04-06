@@ -17,10 +17,12 @@ interface FileCardProps {
   colors: ColorTokens
   onOpen: (storedPath: string) => void
   onRemove: (fileId: string) => void
-  onDelete: (fileId: string, storedPath: string) => void
+  onDelete: (fileId: string, sourcePath: string, storedPath: string) => void
+  onMoveUp: (fileId: string) => void
+  onMoveDown: (fileId: string) => void
 }
 
-export function FileCard({ file, settings, colors, onOpen, onRemove, onDelete }: FileCardProps) {
+export function FileCard({ file, settings, colors, onOpen, onRemove, onDelete, onMoveUp, onMoveDown }: FileCardProps) {
   return (
     <li
       style={{
@@ -66,6 +68,48 @@ export function FileCard({ file, settings, colors, onOpen, onRemove, onDelete }:
       )}
 
       <button
+        aria-label="move up"
+        title="Move up"
+        onClick={(e) => {
+          e.stopPropagation()
+          onMoveUp(file.id)
+        }}
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          color: colors.textMuted,
+          fontSize: '11px',
+          lineHeight: 1,
+          padding: '0 2px',
+          flexShrink: 0,
+        }}
+      >
+        ↑
+      </button>
+
+      <button
+        aria-label="move down"
+        title="Move down"
+        onClick={(e) => {
+          e.stopPropagation()
+          onMoveDown(file.id)
+        }}
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          color: colors.textMuted,
+          fontSize: '11px',
+          lineHeight: 1,
+          padding: '0 2px',
+          flexShrink: 0,
+        }}
+      >
+        ↓
+      </button>
+
+      <button
         aria-label="remove"
         title="Remove from Vanish Box"
         onClick={(e) => {
@@ -91,7 +135,7 @@ export function FileCard({ file, settings, colors, onOpen, onRemove, onDelete }:
         title="Delete file from computer"
         onClick={(e) => {
           e.stopPropagation()
-          onDelete(file.id, file.storedPath)
+          onDelete(file.id, file.sourcePath, file.storedPath)
         }}
         style={{
           background: 'none',
