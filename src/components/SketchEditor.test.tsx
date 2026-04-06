@@ -85,3 +85,46 @@ describe('SketchEditor — undo/redo', () => {
     expect(redoBtn.disabled).toBe(true)
   })
 })
+
+describe('SketchEditor — clear confirmation', () => {
+  it('clicking Clear shows "Clear all?" text', () => {
+    render(<SketchEditor dataUrl={null} colors={COLORS.light} onSave={noop} onClose={noop} />)
+    fireEvent.click(screen.getByRole('button', { name: /^Clear$/ }))
+    expect(screen.getByText('Clear all?')).toBeTruthy()
+  })
+
+  it('clicking Clear shows cancel-clear and confirm-clear buttons', () => {
+    render(<SketchEditor dataUrl={null} colors={COLORS.light} onSave={noop} onClose={noop} />)
+    fireEvent.click(screen.getByRole('button', { name: /^Clear$/ }))
+    expect(screen.getByRole('button', { name: 'cancel clear' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'confirm clear' })).toBeTruthy()
+  })
+
+  it('clicking cancel-clear hides the confirmation and restores the Clear button', () => {
+    render(<SketchEditor dataUrl={null} colors={COLORS.light} onSave={noop} onClose={noop} />)
+    fireEvent.click(screen.getByRole('button', { name: /^Clear$/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'cancel clear' }))
+    expect(screen.queryByText('Clear all?')).toBeNull()
+    expect(screen.getByRole('button', { name: /^Clear$/ })).toBeTruthy()
+  })
+
+  it('clicking confirm-clear hides the confirmation', () => {
+    render(<SketchEditor dataUrl={null} colors={COLORS.light} onSave={noop} onClose={noop} />)
+    fireEvent.click(screen.getByRole('button', { name: /^Clear$/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'confirm clear' }))
+    expect(screen.queryByText('Clear all?')).toBeNull()
+  })
+
+  it('confirm-clear pushes to undo history (Undo becomes enabled after clear)', () => {
+    const { container } = render(
+      <SketchEditor dataUrl={null} colors={COLORS.light} onSave={noop} onClose={noop} />
+    )
+    const canvas = container.querySelector('canvas')!
+    fireEvent.mouseDown(canvas)
+    fireEvent.mouseUp(canvas)
+    fireEvent.click(screen.getByRole('button', { name: /^Clear$/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'confirm clear' }))
+    const btn = screen.getByRole('button', { name: 'undo' }) as HTMLButtonElement
+    expect(btn.disabled).toBe(false)
+  })
+})

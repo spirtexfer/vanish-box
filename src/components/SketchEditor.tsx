@@ -20,6 +20,7 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
   const historyIdxRef = useRef(-1)
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
+  const [confirmClear, setConfirmClear] = useState(false)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -136,6 +137,12 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
     ctx.fillRect(0, 0, canvas.width, canvas.height)
   }
 
+  function handleConfirmClear() {
+    clearCanvas()
+    pushHistory()
+    setConfirmClear(false)
+  }
+
   function save() {
     onSave(canvasRef.current!.toDataURL('image/png'))
     onClose()
@@ -201,15 +208,41 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
             aria-label="brush size"
             style={{ width: '80px' }}
           />
-          <button
-            onClick={clearCanvas}
-            style={{
-              padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
-              border: `1px solid ${colors.border}`, background: 'transparent', color: colors.text,
-            }}
-          >
-            Clear
-          </button>
+          {confirmClear ? (
+            <>
+              <span style={{ fontSize: '12px', color: colors.text }}>Clear all?</span>
+              <button
+                aria-label="cancel clear"
+                onClick={() => setConfirmClear(false)}
+                style={{
+                  padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
+                  border: `1px solid ${colors.border}`, background: 'transparent', color: colors.text,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                aria-label="confirm clear"
+                onClick={handleConfirmClear}
+                style={{
+                  padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
+                  background: '#ef4444', color: '#fff', border: 'none',
+                }}
+              >
+                Clear
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setConfirmClear(true)}
+              style={{
+                padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
+                border: `1px solid ${colors.border}`, background: 'transparent', color: colors.text,
+              }}
+            >
+              Clear
+            </button>
+          )}
           <button
             onClick={undo}
             aria-label="undo"
