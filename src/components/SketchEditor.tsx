@@ -15,6 +15,12 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
   const [isDrawing, setIsDrawing] = useState(false)
   const lastPos = useRef<{ x: number; y: number } | null>(null)
 
+  // undo/redo history
+  const historySnaps = useRef<string[]>([])
+  const historyIdxRef = useRef(-1)
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRedo, setCanRedo] = useState(false)
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -24,9 +30,68 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     if (dataUrl) {
       const img = new Image()
-      img.onload = () => ctx.drawImage(img, 0, 0)
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0)
+        pushHistory()
+      }
       img.src = dataUrl
+    } else {
+      pushHistory()
     }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function pushHistory() {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const snap = canvas.toDataURL('image/png')
+    historySnaps.current = historySnaps.current.slice(0, historyIdxRef.current + 1)
+    historySnaps.current.push(snap)
+    historyIdxRef.current = historySnaps.current.length - 1
+    setCanUndo(historyIdxRef.current > 0)
+    setCanRedo(false)
+  }
+
+  function restoreCanvas(idx: number) {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    const img = new Image()
+    img.onload = () => ctx.drawImage(img, 0, 0)
+    img.src = historySnaps.current[idx]
+  }
+
+  function undo() {
+    if (historyIdxRef.current <= 0) return
+    historyIdxRef.current -= 1
+    restoreCanvas(historyIdxRef.current)
+    setCanUndo(historyIdxRef.current > 0)
+    setCanRedo(true)
+  }
+
+  function redo() {
+    if (historyIdxRef.current >= historySnaps.current.length - 1) return
+    historyIdxRef.current += 1
+    restoreCanvas(historyIdxRef.current)
+    setCanUndo(true)
+    setCanRedo(historyIdxRef.current < historySnaps.current.length - 1)
+  }
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'z') {
+        e.preventDefault()
+        undo()
+      } else if (
+        (e.ctrlKey && e.key.toLowerCase() === 'y') ||
+        (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'z')
+      ) {
+        e.preventDefault()
+        redo()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function getPos(e: React.MouseEvent<HTMLCanvasElement>) {
@@ -59,6 +124,7 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
   }
 
   function stopDrawing() {
+    if (lastPos.current !== null) pushHistory()
     setIsDrawing(false)
     lastPos.current = null
   }
@@ -101,16 +167,12 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
           overflowY: 'auto',
         }}
       >
-        <div
-          style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}
-        >
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
             onClick={() => setTool('pen')}
             aria-pressed={tool === 'pen'}
             style={{
-              padding: '4px 10px',
-              borderRadius: '6px',
-              cursor: 'pointer',
+              padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
               background: tool === 'pen' ? '#6366f1' : 'transparent',
               color: tool === 'pen' ? '#fff' : colors.text,
               border: `1px solid ${colors.border}`,
@@ -122,9 +184,7 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
             onClick={() => setTool('eraser')}
             aria-pressed={tool === 'eraser'}
             style={{
-              padding: '4px 10px',
-              borderRadius: '6px',
-              cursor: 'pointer',
+              padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
               background: tool === 'eraser' ? '#6366f1' : 'transparent',
               color: tool === 'eraser' ? '#fff' : colors.text,
               border: `1px solid ${colors.border}`,
@@ -144,26 +204,46 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
           <button
             onClick={clearCanvas}
             style={{
-              padding: '4px 10px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.text,
+              padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
+              border: `1px solid ${colors.border}`, background: 'transparent', color: colors.text,
             }}
           >
             Clear
+          </button>
+          <button
+            onClick={undo}
+            aria-label="undo"
+            disabled={!canUndo}
+            style={{
+              padding: '4px 10px', borderRadius: '6px',
+              cursor: canUndo ? 'pointer' : 'default',
+              border: `1px solid ${colors.border}`, background: 'transparent',
+              color: canUndo ? colors.text : colors.textMuted,
+              opacity: canUndo ? 1 : 0.4,
+            }}
+          >
+            ↩ Undo
+          </button>
+          <button
+            onClick={redo}
+            aria-label="redo"
+            disabled={!canRedo}
+            style={{
+              padding: '4px 10px', borderRadius: '6px',
+              cursor: canRedo ? 'pointer' : 'default',
+              border: `1px solid ${colors.border}`, background: 'transparent',
+              color: canRedo ? colors.text : colors.textMuted,
+              opacity: canRedo ? 1 : 0.4,
+            }}
+          >
+            ↪ Redo
           </button>
           <div style={{ flex: 1 }} />
           <button
             onClick={onClose}
             style={{
-              padding: '4px 10px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              border: `1px solid ${colors.border}`,
-              background: colors.bg,
-              color: colors.text,
+              padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
+              border: `1px solid ${colors.border}`, background: colors.bg, color: colors.text,
             }}
           >
             Cancel
@@ -171,12 +251,8 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
           <button
             onClick={save}
             style={{
-              padding: '4px 10px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              background: '#6366f1',
-              color: '#fff',
-              border: 'none',
+              padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
+              background: '#6366f1', color: '#fff', border: 'none',
             }}
           >
             Save
