@@ -274,6 +274,7 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
           <div style={{ flex: 1 }} />
           <button
             onClick={onClose}
+            aria-label="close editor"
             style={{
               padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
               border: `1px solid ${colors.border}`, background: colors.bg, color: colors.text,
