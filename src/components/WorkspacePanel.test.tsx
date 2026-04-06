@@ -13,8 +13,10 @@ vi.mock('@tauri-apps/api/core', () => ({
   invoke: vi.fn(),
 }))
 
-beforeEach(() => {
+beforeEach(async () => {
   useWorkspaceStore.getState().reset()
+  const { invoke } = await import('@tauri-apps/api/core')
+  ;(invoke as ReturnType<typeof vi.fn>).mockResolvedValue(undefined)
 })
 
 describe('WorkspacePanel', () => {
@@ -88,5 +90,12 @@ describe('WorkspacePanel', () => {
     const darkModeCheckbox = screen.getByRole('checkbox', { name: /Dark mode/i })
     fireEvent.click(darkModeCheckbox)
     expect(useWorkspaceStore.getState().settings.theme).toBe('dark')
+  })
+
+  it('calls update_shortcut on mount with stored keybind', async () => {
+    const { invoke } = await import('@tauri-apps/api/core')
+    const mockInvoke = invoke as ReturnType<typeof vi.fn>
+    render(<WorkspacePanel />)
+    expect(mockInvoke).toHaveBeenCalledWith('update_shortcut', { keybind: 'ctrl+shift+v' })
   })
 })

@@ -1,5 +1,64 @@
+import React, { useState } from 'react'
+import { invoke } from '@tauri-apps/api/core'
 import { Settings } from '../store/useWorkspaceStore'
 import { ColorTokens } from '../theme'
+
+function KeybindCapture({
+  keybind,
+  colors,
+  onCapture,
+}: {
+  keybind: string
+  colors: ColorTokens
+  onCapture: (keybind: string) => void
+}) {
+  const [capturing, setCapturing] = useState(false)
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    e.preventDefault()
+    const parts: string[] = []
+    if (e.ctrlKey) parts.push('ctrl')
+    if (e.shiftKey) parts.push('shift')
+    if (e.altKey) parts.push('alt')
+    if (e.metaKey) parts.push('super')
+    const key = e.key.toLowerCase()
+    if (!['control', 'shift', 'alt', 'meta'].includes(key)) {
+      parts.push(key)
+      onCapture(parts.join('+'))
+      setCapturing(false)
+    }
+  }
+
+  return (
+    <div style={{ fontSize: '12px', color: colors.text, marginTop: '4px' }}>
+      <div style={{ marginBottom: '4px' }}>Global shortcut</div>
+      <input
+        readOnly
+        value={capturing ? 'Press keys…' : keybind}
+        onFocus={() => setCapturing(true)}
+        onBlur={() => setCapturing(false)}
+        onKeyDown={handleKeyDown}
+        aria-label="keybind capture"
+        style={{
+          width: '100%',
+          padding: '4px 8px',
+          border: `1px solid ${capturing ? '#6366f1' : colors.border}`,
+          borderRadius: '6px',
+          background: colors.bgSecondary,
+          color: colors.text,
+          fontSize: '12px',
+          cursor: 'pointer',
+          outline: 'none',
+          boxSizing: 'border-box',
+          fontFamily: 'monospace',
+        }}
+      />
+      <div style={{ fontSize: '11px', color: colors.textMuted, marginTop: '2px' }}>
+        Click and press a key combination to change
+      </div>
+    </div>
+  )
+}
 
 interface SettingsPanelProps {
   settings: Settings
@@ -100,9 +159,16 @@ export function SettingsPanel({ settings, colors, onUpdate, onClose }: SettingsP
           />
         </label>
 
-        <div style={{ fontSize: '12px', color: colors.textMuted, marginTop: '4px' }}>
-          Global shortcut: <code>{settings.keybind}</code>
-        </div>
+        <KeybindCapture
+          keybind={settings.keybind}
+          colors={colors}
+          onCapture={(keybind) => {
+            onUpdate({ keybind })
+            invoke('update_shortcut', { keybind }).catch((e) =>
+              console.error('[VanishBox] Failed to update shortcut:', e)
+            )
+          }}
+        />
       </div>
     </div>
   )

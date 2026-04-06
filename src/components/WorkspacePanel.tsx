@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { invoke } from '@tauri-apps/api/core'
 import { useWorkspaceStore } from '../store/useWorkspaceStore'
 import { COLORS } from '../theme'
 import { TabBar } from './TabBar'
@@ -12,6 +13,12 @@ export function WorkspacePanel() {
 
   const [showSettings, setShowSettings] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
+
+  useEffect(() => {
+    invoke('update_shortcut', { keybind: settings.keybind }).catch((e) =>
+      console.error('[VanishBox] Failed to apply keybind:', e)
+    )
+  }, []) // run once on mount
 
   function handleClearConfirmed() {
     if (activeTab) clearTab(activeTab.id)
