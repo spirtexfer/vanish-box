@@ -6,7 +6,7 @@ export type TabColor = (typeof TAB_COLORS)[number]
 export const TAB_NAME_MAX_LEN = 20
 
 export type SectionLayout = 'list' | 'grid'
-export type SectionType = 'files' | 'notes' | 'sketches'
+export type SectionType = 'files' | 'notes' | 'sketches' | 'links'
 
 export interface SectionConfig {
   type: SectionType
@@ -17,6 +17,7 @@ export interface WorkspaceFile {
   id: string
   originalName: string
   storedPath: string
+  sourcePath: string
   size: number
   addedAt: number
 }
@@ -39,6 +40,13 @@ export interface SketchCard {
   updatedAt: number
 }
 
+export interface LinkItem {
+  id: string
+  title: string
+  url: string
+  createdAt: number
+}
+
 export interface Tab {
   id: string
   name: string
@@ -47,6 +55,7 @@ export interface Tab {
   files: WorkspaceFile[]
   notes: NoteCard[]
   sketches: SketchCard[]
+  links: LinkItem[]
 }
 
 export type Theme = 'light' | 'dark'
@@ -63,6 +72,7 @@ function makeDefaultSections(): SectionConfig[] {
     { type: 'files', layout: 'list' },
     { type: 'notes', layout: 'list' },
     { type: 'sketches', layout: 'list' },
+    { type: 'links', layout: 'list' },
   ]
 }
 
@@ -75,6 +85,7 @@ function makeDefaultTab(): Tab {
     files: [],
     notes: [],
     sketches: [],
+    links: [],
   }
 }
 
@@ -107,8 +118,28 @@ interface WorkspaceStore {
   updateSketch: (tabId: string, sketchId: string, patch: Partial<Pick<SketchCard, 'title' | 'dataUrl' | 'collapsed'>>) => void
   removeSketch: (tabId: string, sketchId: string) => void
 
+  addLink: (tabId: string, url: string, title: string) => void
+  updateLink: (tabId: string, linkId: string, patch: Partial<Pick<LinkItem, 'title' | 'url'>>) => void
+  removeLink: (tabId: string, linkId: string) => void
+
   updateSettings: (s: Partial<Settings>) => void
   reset: () => void
+}
+
+export function migrateStore(state: any, fromVersion: number): any {
+  if (fromVersion === 0) {
+    return {
+      ...state,
+      tabs: (state.tabs ?? []).map((tab: any) => ({
+        ...tab,
+        links: tab.links ?? [],
+        sections: (tab.sections ?? []).some((s: any) => s.type === 'links')
+          ? tab.sections
+          : [...(tab.sections ?? []), { type: 'links', layout: 'list' }],
+      })),
+    }
+  }
+  return state
 }
 
 export const useWorkspaceStore = create<WorkspaceStore>()(
@@ -129,6 +160,7 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
             files: [],
             notes: [],
             sketches: [],
+            links: [],
           }
           set((state) => ({ tabs: [...state.tabs, tab], activeTabId: tab.id }))
         },
@@ -165,7 +197,7 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
         clearTab: (id) =>
           set((state) => ({
             tabs: state.tabs.map((t) =>
-              t.id === id ? { ...t, files: [], notes: [], sketches: [] } : t
+              t.id === id ? { ...t, files: [], notes: [], sketches: [], links: [] } : t
             ),
           })),
 
@@ -269,6 +301,41 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
             ),
           })),
 
+        addLink: (tabId, url, title) => {
+          const derivedTitle = title.trim() || (() => {
+            try { return new URL(url).hostname } catch { return url }
+          })()
+          const link: LinkItem = {
+            id: crypto.randomUUID(),
+            title: derivedTitle,
+            url,
+            createdAt: Date.now(),
+          }
+          set((state) => ({
+            tabs: state.tabs.map((t) =>
+              t.id === tabId ? { ...t, links: [...t.links, link] } : t
+            ),
+          }))
+        },
+
+        updateLink: (tabId, linkId, patch) =>
+          set((state) => ({
+            tabs: state.tabs.map((t) =>
+              t.id === tabId
+                ? { ...t, links: t.links.map((l) => l.id === linkId ? { ...l, ...patch } : l) }
+                : t
+            ),
+          })),
+
+        removeLink: (tabId, linkId) =>
+          set((state) => ({
+            tabs: state.tabs.map((t) =>
+              t.id === tabId
+                ? { ...t, links: t.links.filter((l) => l.id !== linkId) }
+                : t
+            ),
+          })),
+
         updateSettings: (s) =>
           set((state) => ({ settings: { ...state.settings, ...s } })),
 
@@ -278,6 +345,6 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
         },
       }
     },
-    { name: 'vanish-box-workspace' }
+    { name: 'vanish-box-workspace', version: 1, migrate: migrateStore }
   )
 )

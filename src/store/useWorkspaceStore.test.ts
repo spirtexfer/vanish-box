@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useWorkspaceStore } from './useWorkspaceStore'
+import { useWorkspaceStore, migrateStore } from './useWorkspaceStore'
 import type { TabColor } from './useWorkspaceStore'
 
 beforeEach(() => {
@@ -19,10 +19,10 @@ describe('initial state', () => {
     expect(result.current.activeTabId).toBe(result.current.tabs[0].id)
   })
 
-  it('default tab has three sections: files, notes, sketches', () => {
+  it('default tab has four sections: files, notes, sketches, links', () => {
     const { result } = renderHook(() => useWorkspaceStore())
     const types = result.current.tabs[0].sections.map((s) => s.type)
-    expect(types).toEqual(['files', 'notes', 'sketches'])
+    expect(types).toEqual(['files', 'notes', 'sketches', 'links'])
   })
 
   it('default tab has empty files, notes, and sketches', () => {
@@ -49,11 +49,11 @@ describe('createTab', () => {
     expect(result.current.tabs[1].name).toBe('A'.repeat(20))
   })
 
-  it('new tab has three default sections', () => {
+  it('new tab has four default sections', () => {
     const { result } = renderHook(() => useWorkspaceStore())
     act(() => { result.current.createTab('Dev', 'green') })
     const types = result.current.tabs[1].sections.map((s) => s.type)
-    expect(types).toEqual(['files', 'notes', 'sketches'])
+    expect(types).toEqual(['files', 'notes', 'sketches', 'links'])
   })
 })
 
@@ -135,7 +135,7 @@ describe('clearTab', () => {
     const tabId = result.current.tabs[0].id
     act(() => {
       result.current.addFiles(tabId, [
-        { id: 'f1', originalName: 'a.txt', storedPath: '/tmp/a.txt', size: 10, addedAt: 0 },
+        { id: 'f1', originalName: 'a.txt', storedPath: '/tmp/a.txt', sourcePath: '/original/a.txt', size: 10, addedAt: 0 },
       ])
       result.current.addNote(tabId)
       result.current.addSketch(tabId)
@@ -159,11 +159,22 @@ describe('addFiles / removeFile', () => {
     const tabAId = result.current.tabs[0].id
     const tabBId = result.current.tabs[1].id
     act(() => {
-      result.current.addFiles(tabAId, [{ id: 'f1', originalName: 'x.txt', storedPath: '/x', size: 1, addedAt: 0 }])
+      result.current.addFiles(tabAId, [{ id: 'f1', originalName: 'x.txt', storedPath: '/x', sourcePath: '/original/x.txt', size: 1, addedAt: 0 }])
     })
     expect(result.current.tabs[0].files).toHaveLength(1)
     expect(result.current.tabs[1].files).toHaveLength(0)
     void tabBId
+  })
+
+  it('sourcePath is preserved through addFiles', () => {
+    const { result } = renderHook(() => useWorkspaceStore())
+    const tabId = result.current.tabs[0].id
+    act(() => {
+      result.current.addFiles(tabId, [
+        { id: 'f1', originalName: 'a.txt', storedPath: '/stored/a.txt', sourcePath: '/original/a.txt', size: 1, addedAt: 0 },
+      ])
+    })
+    expect(result.current.tabs[0].files[0].sourcePath).toBe('/original/a.txt')
   })
 
   it('removeFile removes from correct tab only', () => {
@@ -171,8 +182,8 @@ describe('addFiles / removeFile', () => {
     const tabId = result.current.tabs[0].id
     act(() => {
       result.current.addFiles(tabId, [
-        { id: 'f1', originalName: 'a.txt', storedPath: '/a', size: 1, addedAt: 0 },
-        { id: 'f2', originalName: 'b.txt', storedPath: '/b', size: 1, addedAt: 0 },
+        { id: 'f1', originalName: 'a.txt', storedPath: '/a', sourcePath: '/original/a.txt', size: 1, addedAt: 0 },
+        { id: 'f2', originalName: 'b.txt', storedPath: '/b', sourcePath: '/original/b.txt', size: 1, addedAt: 0 },
       ])
     })
     act(() => { result.current.removeFile(tabId, 'f1') })
@@ -246,6 +257,77 @@ describe('addSketch / updateSketch / removeSketch', () => {
     act(() => { result.current.removeSketch(tabId, sketchId) })
     expect(result.current.tabs[0].sketches).toHaveLength(1)
     expect(result.current.tabs[0].sketches[0].id).not.toBe(sketchId)
+  })
+})
+
+describe('persist migration — v0 → v1', () => {
+  it('backfills links:[] and links section on a tab that was persisted without them', () => {
+    const oldState = {
+      tabs: [{
+        id: 'old-tab',
+        name: 'Old',
+        color: 'blue',
+        sections: [
+          { type: 'files', layout: 'list' },
+          { type: 'notes', layout: 'list' },
+          { type: 'sketches', layout: 'list' },
+        ],
+        files: [],
+        notes: [],
+        sketches: [],
+        // no links field
+      }],
+      activeTabId: 'old-tab',
+      settings: { theme: 'light', keybind: 'ctrl+shift+v', showFileSize: true, showFileTimestamp: true },
+    }
+    const migrated = migrateStore(oldState, 0) as any
+    expect(migrated.tabs[0].links).toEqual([])
+    expect(migrated.tabs[0].sections.map((s: any) => s.type)).toContain('links')
+  })
+})
+
+describe('addLink / updateLink / removeLink', () => {
+  it('default tab has empty links array', () => {
+    const { result } = renderHook(() => useWorkspaceStore())
+    expect(result.current.tabs[0].links).toEqual([])
+  })
+
+  it('addLink creates a link with the given url and title', () => {
+    const { result } = renderHook(() => useWorkspaceStore())
+    const tabId = result.current.tabs[0].id
+    act(() => { result.current.addLink(tabId, 'https://example.com', 'Example') })
+    const link = result.current.tabs[0].links[0]
+    expect(link.url).toBe('https://example.com')
+    expect(link.title).toBe('Example')
+    expect(link.id).toBeTruthy()
+  })
+
+  it('addLink derives title from hostname when title is blank', () => {
+    const { result } = renderHook(() => useWorkspaceStore())
+    const tabId = result.current.tabs[0].id
+    act(() => { result.current.addLink(tabId, 'https://github.com/foo/bar', '') })
+    expect(result.current.tabs[0].links[0].title).toBe('github.com')
+  })
+
+  it('updateLink patches title and url', () => {
+    const { result } = renderHook(() => useWorkspaceStore())
+    const tabId = result.current.tabs[0].id
+    act(() => { result.current.addLink(tabId, 'https://a.com', 'A') })
+    const id = result.current.tabs[0].links[0].id
+    act(() => { result.current.updateLink(tabId, id, { title: 'B', url: 'https://b.com' }) })
+    expect(result.current.tabs[0].links[0].title).toBe('B')
+    expect(result.current.tabs[0].links[0].url).toBe('https://b.com')
+  })
+
+  it('removeLink removes the correct link', () => {
+    const { result } = renderHook(() => useWorkspaceStore())
+    const tabId = result.current.tabs[0].id
+    act(() => { result.current.addLink(tabId, 'https://a.com', 'A') })
+    act(() => { result.current.addLink(tabId, 'https://b.com', 'B') })
+    const id = result.current.tabs[0].links[0].id
+    act(() => { result.current.removeLink(tabId, id) })
+    expect(result.current.tabs[0].links).toHaveLength(1)
+    expect(result.current.tabs[0].links[0].title).toBe('B')
   })
 })
 
