@@ -15,6 +15,7 @@ fn main() {
             commands::open_url,
             commands::delete_file,
             commands::trash_file,
+            commands::update_shortcut,
         ])
         .setup(|app| {
             tray::setup_tray(app)?;
