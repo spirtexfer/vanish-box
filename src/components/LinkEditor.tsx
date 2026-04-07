@@ -24,6 +24,7 @@ export function LinkEditor({ link, colors, onSave, onClose }: LinkEditorProps) {
   return (
     <div
       className="vb-overlay"
+      onClick={hasUrl ? save : onClose}
       style={{
         position: 'fixed', inset: 0,
         background: 'rgba(0,0,0,0.3)',
@@ -33,6 +34,7 @@ export function LinkEditor({ link, colors, onSave, onClose }: LinkEditorProps) {
     >
       <div
         className="vb-modal"
+        onClick={(e) => e.stopPropagation()}
         style={{
           background: colors.bgCard,
           borderRadius: '16px',
