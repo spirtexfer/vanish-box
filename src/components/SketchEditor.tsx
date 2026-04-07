@@ -175,6 +175,7 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
 
   return (
     <div
+      className="vb-overlay"
       style={{
         position: 'fixed',
         inset: 0,
@@ -187,6 +188,7 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
       }}
     >
       <div
+        className="vb-modal"
         style={{
           background: colors.bgCard,
           borderRadius: '16px',

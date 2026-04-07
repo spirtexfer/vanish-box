@@ -27,3 +27,65 @@ html, body, #root {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.25);
 }
+
+/* ── Keyframes ───────────────────────────────────────────────── */
+@keyframes vb-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes vb-slide-up {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes vb-modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(4px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+@keyframes vb-sheet-in {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* ── Overlay ─────────────────────────────────────────────────── */
+.vb-overlay {
+  animation: vb-fade-in 0.15s ease;
+}
+
+/* ── Modal / bottom-sheet dialogs ────────────────────────────── */
+.vb-modal {
+  animation: vb-modal-in 0.18s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.vb-sheet {
+  animation: vb-sheet-in 0.22s cubic-bezier(0.34, 1.1, 0.64, 1);
+}
+
+/* ── Cards ───────────────────────────────────────────────────── */
+.vb-card {
+  animation: vb-slide-up 0.18s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.vb-card:hover {
+  transform: translateY(-1px);
+}
+/* Suppress hover lift while being dragged (dnd-kit sets inline transform) */
+.vb-card[data-dragging="true"] {
+  transition: none;
+  transform: none !important; /* dnd-kit inline style controls position */
+}
+
+/* ── Tab content fade on switch ──────────────────────────────── */
+.vb-tab-content {
+  animation: vb-fade-in 0.15s ease;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.vb-btn {
+  transition: background 0.12s ease, color 0.12s ease, opacity 0.12s ease, transform 0.1s ease;
+}
+.vb-btn:active {
+  transform: scale(0.96);
+}

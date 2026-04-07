@@ -34,6 +34,8 @@ export function FileCard({ file, settings, colors, disabled, onOpen, onRemove, o
       ref={setNodeRef}
       {...attributes}
       {...listeners}
+      className="vb-card"
+      data-dragging={isDragging ? 'true' : undefined}
       style={{
         transform: CSS.Translate.toString(transform),
         transition,

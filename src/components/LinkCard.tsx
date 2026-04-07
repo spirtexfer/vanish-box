@@ -23,6 +23,8 @@ export function LinkCard({ link, colors, disabled, onOpen, onEdit, onRemove }: L
       ref={setNodeRef}
       {...attributes}
       {...listeners}
+      className="vb-card"
+      data-dragging={isDragging ? 'true' : undefined}
       style={{
         transform: CSS.Translate.toString(transform),
         transition,

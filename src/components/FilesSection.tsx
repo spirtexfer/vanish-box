@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
+import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { useWorkspaceStore, WorkspaceFile } from '../store/useWorkspaceStore'
 import { FileCard } from './FileCard'
 import { SortableList } from './SortableList'
@@ -50,6 +51,26 @@ export function FilesSection({ tabId, colors }: FilesSectionProps) {
       console.error('[VanishBox] Failed to trash file:', e)
       alert('Could not move the file to trash. It may have already been removed.')
     }
+  }
+
+  async function handleAddFile() {
+    const selected = await openDialog({ multiple: true, directory: false })
+    if (!selected) return
+    const paths = Array.isArray(selected) ? selected : [selected]
+    const results = await Promise.allSettled(
+      paths.map((p) => invoke<CopiedFileInfo>('copy_file', { source: p }))
+    )
+    const newFiles: WorkspaceFile[] = results
+      .filter((r): r is PromiseFulfilledResult<CopiedFileInfo> => r.status === 'fulfilled')
+      .map((r) => ({
+        id: r.value.id,
+        originalName: r.value.original_name,
+        storedPath: r.value.stored_path,
+        sourcePath: r.value.source_path,
+        size: r.value.size,
+        addedAt: Date.now(),
+      }))
+    if (newFiles.length > 0) addFiles(tabId, newFiles)
   }
 
   useEffect(() => {
@@ -108,6 +129,7 @@ export function FilesSection({ tabId, colors }: FilesSectionProps) {
     <>
       {deleteConfirm && (
         <div
+          className="vb-overlay"
           style={{
             position: 'fixed',
             inset: 0,
@@ -120,6 +142,7 @@ export function FilesSection({ tabId, colors }: FilesSectionProps) {
           }}
         >
           <div
+            className="vb-modal"
             style={{
               background: colors.bgCard,
               borderRadius: '16px',
@@ -221,6 +244,27 @@ export function FilesSection({ tabId, colors }: FilesSectionProps) {
           </SortableList>
         )}
       </div>
+
+      <button
+        onClick={handleAddFile}
+        className="vb-btn"
+        style={{
+          marginTop: '4px',
+          width: '100%',
+          padding: '6px',
+          border: 'none',
+          borderRadius: '8px',
+          background: 'transparent',
+          color: colors.accent,
+          cursor: 'pointer',
+          fontSize: '12px',
+          fontWeight: 500,
+          opacity: 0.75,
+          textAlign: 'left',
+        }}
+      >
+        + Add file
+      </button>
     </>
   )
 }

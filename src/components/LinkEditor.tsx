@@ -23,6 +23,7 @@ export function LinkEditor({ link, colors, onSave, onClose }: LinkEditorProps) {
 
   return (
     <div
+      className="vb-overlay"
       style={{
         position: 'fixed', inset: 0,
         background: 'rgba(0,0,0,0.3)',
@@ -31,6 +32,7 @@ export function LinkEditor({ link, colors, onSave, onClose }: LinkEditorProps) {
       }}
     >
       <div
+        className="vb-modal"
         style={{
           background: colors.bgCard,
           borderRadius: '16px',

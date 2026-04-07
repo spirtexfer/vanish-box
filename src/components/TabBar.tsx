@@ -207,6 +207,7 @@ export function TabBar({ colors }: TabBarProps) {
     >
       {confirmDeleteId && (
         <div
+          className="vb-overlay"
           style={{
             position: 'fixed',
             inset: 0,
@@ -219,6 +220,7 @@ export function TabBar({ colors }: TabBarProps) {
           }}
         >
           <div
+            className="vb-modal"
             style={{
               background: colors.bgCard,
               borderRadius: '16px',

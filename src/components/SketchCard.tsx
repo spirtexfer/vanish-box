@@ -23,6 +23,8 @@ export function SketchCard({ sketch, colors, disabled, onEdit, onRemove, onToggl
       ref={setNodeRef}
       {...attributes}
       {...listeners}
+      className="vb-card"
+      data-dragging={isDragging ? 'true' : undefined}
       style={{
         transform: CSS.Translate.toString(transform),
         transition,

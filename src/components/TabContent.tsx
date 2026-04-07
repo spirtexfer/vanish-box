@@ -20,6 +20,8 @@ export function TabContent({ tab, colors }: TabContentProps) {
 
   return (
     <div
+      key={tab.id}
+      className="vb-tab-content"
       style={{
         flex: 1,
         overflowY: 'auto',

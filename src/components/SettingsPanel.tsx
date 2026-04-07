@@ -89,6 +89,7 @@ export function SettingsPanel({ settings, colors, onUpdate, onClose }: SettingsP
 
   return (
     <div
+      className="vb-overlay"
       style={{
         position: 'fixed',
         inset: 0,
@@ -102,6 +103,7 @@ export function SettingsPanel({ settings, colors, onUpdate, onClose }: SettingsP
       onClick={onClose}
     >
       <div
+        className="vb-sheet"
         onClick={(e) => e.stopPropagation()}
         style={{
           background: colors.bgCard,

@@ -23,6 +23,8 @@ export function NoteCard({ note, colors, disabled, onEdit, onRemove, onToggleCol
       ref={setNodeRef}
       {...attributes}
       {...listeners}
+      className="vb-card"
+      data-dragging={isDragging ? 'true' : undefined}
       style={{
         transform: CSS.Translate.toString(transform),
         transition,
