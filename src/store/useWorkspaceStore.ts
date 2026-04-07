@@ -109,7 +109,12 @@ interface WorkspaceStore {
 
   addFiles: (tabId: string, files: WorkspaceFile[]) => void
   removeFile: (tabId: string, fileId: string) => void
-  moveFile: (tabId: string, fileId: string, direction: 'up' | 'down') => void
+
+  reorderTabs: (fromIndex: number, toIndex: number) => void
+  reorderFiles: (tabId: string, fromIndex: number, toIndex: number) => void
+  reorderNotes: (tabId: string, fromIndex: number, toIndex: number) => void
+  reorderSketches: (tabId: string, fromIndex: number, toIndex: number) => void
+  reorderLinks: (tabId: string, fromIndex: number, toIndex: number) => void
 
   addNote: (tabId: string) => void
   updateNote: (tabId: string, noteId: string, patch: Partial<Pick<NoteCard, 'title' | 'body' | 'collapsed'>>) => void
@@ -125,6 +130,13 @@ interface WorkspaceStore {
 
   updateSettings: (s: Partial<Settings>) => void
   reset: () => void
+}
+
+function arrayMove<T>(arr: T[], from: number, to: number): T[] {
+  const result = [...arr]
+  const [item] = result.splice(from, 1)
+  result.splice(to, 0, item)
+  return result
 }
 
 export function hostnameOrUrl(url: string): string {
@@ -226,18 +238,35 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
             ),
           })),
 
-        moveFile: (tabId, fileId, direction) =>
+        reorderTabs: (fromIndex, toIndex) =>
+          set((state) => ({ tabs: arrayMove(state.tabs, fromIndex, toIndex) })),
+
+        reorderFiles: (tabId, fromIndex, toIndex) =>
           set((state) => ({
-            tabs: state.tabs.map((t) => {
-              if (t.id !== tabId) return t
-              const files = [...t.files]
-              const idx = files.findIndex((f) => f.id === fileId)
-              if (idx === -1) return t
-              const swapIdx = direction === 'up' ? idx - 1 : idx + 1
-              if (swapIdx < 0 || swapIdx >= files.length) return t
-              ;[files[idx], files[swapIdx]] = [files[swapIdx], files[idx]]
-              return { ...t, files }
-            }),
+            tabs: state.tabs.map((t) =>
+              t.id === tabId ? { ...t, files: arrayMove(t.files, fromIndex, toIndex) } : t
+            ),
+          })),
+
+        reorderNotes: (tabId, fromIndex, toIndex) =>
+          set((state) => ({
+            tabs: state.tabs.map((t) =>
+              t.id === tabId ? { ...t, notes: arrayMove(t.notes, fromIndex, toIndex) } : t
+            ),
+          })),
+
+        reorderSketches: (tabId, fromIndex, toIndex) =>
+          set((state) => ({
+            tabs: state.tabs.map((t) =>
+              t.id === tabId ? { ...t, sketches: arrayMove(t.sketches, fromIndex, toIndex) } : t
+            ),
+          })),
+
+        reorderLinks: (tabId, fromIndex, toIndex) =>
+          set((state) => ({
+            tabs: state.tabs.map((t) =>
+              t.id === tabId ? { ...t, links: arrayMove(t.links, fromIndex, toIndex) } : t
+            ),
           })),
 
         addNote: (tabId) => {
@@ -325,11 +354,11 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
           })),
 
         addLink: (tabId, url, title) => {
-          const derivedTitle = title.trim() || hostnameOrUrl(url)
+          const trimmedUrl = url.trim()
           const link: LinkItem = {
             id: crypto.randomUUID(),
-            title: derivedTitle,
-            url,
+            title: title.trim() || hostnameOrUrl(trimmedUrl),
+            url: trimmedUrl,
             createdAt: Date.now(),
           }
           set((state) => ({

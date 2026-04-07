@@ -151,12 +151,35 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
     onClose()
   }
 
+  const toolBtnStyle = (active: boolean) => ({
+    padding: '5px 12px',
+    borderRadius: '7px',
+    cursor: 'pointer',
+    background: active ? colors.accent : colors.bgHover,
+    color: active ? '#fff' : colors.text,
+    border: 'none',
+    fontSize: '12px',
+    fontWeight: active ? 600 : 500,
+  })
+
+  const ghostBtnStyle = (enabled = true) => ({
+    padding: '5px 12px',
+    borderRadius: '7px',
+    cursor: enabled ? 'pointer' : 'default',
+    border: `1px solid ${colors.border}`,
+    background: 'transparent',
+    color: enabled ? colors.text : colors.textMuted,
+    fontSize: '12px',
+    opacity: enabled ? 1 : 0.4,
+  })
+
   return (
     <div
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.6)',
+        background: 'rgba(0,0,0,0.4)',
+        backdropFilter: 'blur(6px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -165,122 +188,96 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
     >
       <div
         style={{
-          background: colors.bg,
-          border: `1px solid ${colors.border}`,
-          borderRadius: '12px',
+          background: colors.bgCard,
+          borderRadius: '16px',
           padding: '16px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '10px',
+          gap: '12px',
           maxWidth: 'calc(100vw - 32px)',
           maxHeight: 'calc(100vh - 32px)',
           overflowY: 'auto',
+          boxShadow: colors.shadowModal,
         }}
       >
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <button
-            onClick={() => setTool('pen')}
-            aria-pressed={tool === 'pen'}
-            style={{
-              padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
-              background: tool === 'pen' ? '#6366f1' : 'transparent',
-              color: tool === 'pen' ? '#fff' : colors.text,
-              border: `1px solid ${colors.border}`,
-            }}
-          >
+        {/* Toolbar */}
+        <div
+          style={{
+            display: 'flex',
+            gap: '6px',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            background: colors.bgSecondary,
+            borderRadius: '10px',
+            padding: '8px 10px',
+          }}
+        >
+          <button onClick={() => setTool('pen')} aria-pressed={tool === 'pen'} style={toolBtnStyle(tool === 'pen')}>
             Pen
           </button>
-          <button
-            onClick={() => setTool('eraser')}
-            aria-pressed={tool === 'eraser'}
-            style={{
-              padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
-              background: tool === 'eraser' ? '#6366f1' : 'transparent',
-              color: tool === 'eraser' ? '#fff' : colors.text,
-              border: `1px solid ${colors.border}`,
-            }}
-          >
+          <button onClick={() => setTool('eraser')} aria-pressed={tool === 'eraser'} style={toolBtnStyle(tool === 'eraser')}>
             Eraser
           </button>
-          <input
-            type="range"
-            min={1}
-            max={20}
-            value={brushSize}
-            onChange={(e) => setBrushSize(Number(e.target.value))}
-            aria-label="brush size"
-            style={{ width: '80px' }}
-          />
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '0 4px',
+            }}
+          >
+            <input
+              type="range"
+              min={1}
+              max={20}
+              value={brushSize}
+              onChange={(e) => setBrushSize(Number(e.target.value))}
+              aria-label="brush size"
+              style={{ width: '72px', accentColor: colors.accent }}
+            />
+            <span style={{ fontSize: '11px', color: colors.textMuted, minWidth: '18px' }}>
+              {brushSize}
+            </span>
+          </div>
+
+          <div style={{ width: '1px', height: '18px', background: colors.border, margin: '0 2px' }} />
+
           {confirmClear ? (
             <>
               <span style={{ fontSize: '12px', color: colors.text }}>Clear all?</span>
-              <button
-                aria-label="cancel clear"
-                onClick={() => setConfirmClear(false)}
-                style={{
-                  padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
-                  border: `1px solid ${colors.border}`, background: 'transparent', color: colors.text,
-                }}
-              >
-                Cancel
+              <button aria-label="cancel clear" onClick={() => setConfirmClear(false)} style={ghostBtnStyle()}>
+                No
               </button>
               <button
                 aria-label="confirm clear"
                 onClick={handleConfirmClear}
-                style={{
-                  padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
-                  background: '#ef4444', color: '#fff', border: 'none',
-                }}
+                style={{ ...ghostBtnStyle(), color: '#ef4444', borderColor: '#ef4444' }}
               >
                 Clear
               </button>
             </>
           ) : (
-            <button
-              onClick={() => setConfirmClear(true)}
-              style={{
-                padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
-                border: `1px solid ${colors.border}`, background: 'transparent', color: colors.text,
-              }}
-            >
+            <button onClick={() => setConfirmClear(true)} style={ghostBtnStyle()}>
               Clear
             </button>
           )}
-          <button
-            onClick={undo}
-            aria-label="undo"
-            disabled={!canUndo}
-            style={{
-              padding: '4px 10px', borderRadius: '6px',
-              cursor: canUndo ? 'pointer' : 'default',
-              border: `1px solid ${colors.border}`, background: 'transparent',
-              color: canUndo ? colors.text : colors.textMuted,
-              opacity: canUndo ? 1 : 0.4,
-            }}
-          >
+
+          <button onClick={undo} aria-label="undo" disabled={!canUndo} style={ghostBtnStyle(canUndo)}>
             ↩ Undo
           </button>
-          <button
-            onClick={redo}
-            aria-label="redo"
-            disabled={!canRedo}
-            style={{
-              padding: '4px 10px', borderRadius: '6px',
-              cursor: canRedo ? 'pointer' : 'default',
-              border: `1px solid ${colors.border}`, background: 'transparent',
-              color: canRedo ? colors.text : colors.textMuted,
-              opacity: canRedo ? 1 : 0.4,
-            }}
-          >
+          <button onClick={redo} aria-label="redo" disabled={!canRedo} style={ghostBtnStyle(canRedo)}>
             ↪ Redo
           </button>
+
           <div style={{ flex: 1 }} />
+
           <button
             onClick={onClose}
             aria-label="close editor"
             style={{
-              padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
-              border: `1px solid ${colors.border}`, background: colors.bg, color: colors.text,
+              padding: '5px 12px', borderRadius: '7px', cursor: 'pointer',
+              border: 'none', background: colors.bgHover, color: colors.text, fontSize: '12px',
             }}
           >
             Cancel
@@ -288,13 +285,16 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
           <button
             onClick={save}
             style={{
-              padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
-              background: '#6366f1', color: '#fff', border: 'none',
+              padding: '5px 12px', borderRadius: '7px', cursor: 'pointer',
+              background: colors.accentGrad, color: '#fff', border: 'none',
+              fontSize: '12px', fontWeight: 600,
             }}
           >
             Save
           </button>
         </div>
+
+        {/* Canvas */}
         <canvas
           ref={canvasRef}
           width={400}
@@ -305,7 +305,7 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
           onMouseLeave={stopDrawing}
           style={{
             border: `1px solid ${colors.border}`,
-            borderRadius: '8px',
+            borderRadius: '10px',
             cursor: tool === 'eraser' ? 'cell' : 'crosshair',
             background: '#ffffff',
             display: 'block',

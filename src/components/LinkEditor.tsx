@@ -19,18 +19,25 @@ export function LinkEditor({ link, colors, onSave, onClose }: LinkEditorProps) {
     onClose()
   }
 
+  const hasUrl = !!url.trim()
+
   return (
     <div
       style={{
-        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+        position: 'fixed', inset: 0,
+        background: 'rgba(0,0,0,0.3)',
+        backdropFilter: 'blur(6px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200,
       }}
     >
       <div
         style={{
-          background: colors.bg, border: `1px solid ${colors.border}`,
-          borderRadius: '12px', padding: '16px', width: '320px',
-          display: 'flex', flexDirection: 'column', gap: '10px',
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '20px 24px',
+          width: '340px',
+          display: 'flex', flexDirection: 'column', gap: '12px',
+          boxShadow: colors.shadowModal,
         }}
       >
         <input
@@ -39,9 +46,10 @@ export function LinkEditor({ link, colors, onSave, onClose }: LinkEditorProps) {
           aria-label="link title"
           placeholder="Title"
           style={{
-            fontSize: '14px', fontWeight: 600, border: 'none',
-            borderBottom: `1px solid ${colors.border}`, padding: '4px 0',
+            fontSize: '15px', fontWeight: 700, border: 'none',
+            borderBottom: `1px solid ${colors.border}`, padding: '4px 0 8px',
             background: 'transparent', color: colors.text, outline: 'none',
+            letterSpacing: '-0.01em',
           }}
         />
         <input
@@ -52,7 +60,7 @@ export function LinkEditor({ link, colors, onSave, onClose }: LinkEditorProps) {
           autoFocus
           style={{
             fontSize: '13px', border: `1px solid ${colors.border}`,
-            borderRadius: '6px', padding: '8px',
+            borderRadius: '8px', padding: '10px 12px',
             background: colors.bgSecondary, color: colors.text, outline: 'none',
           }}
         />
@@ -60,21 +68,23 @@ export function LinkEditor({ link, colors, onSave, onClose }: LinkEditorProps) {
           <button
             onClick={onClose}
             style={{
-              padding: '6px 12px', cursor: 'pointer', borderRadius: '6px',
-              border: `1px solid ${colors.border}`, background: colors.bg, color: colors.text,
+              padding: '8px 18px', cursor: 'pointer', borderRadius: '8px',
+              border: 'none', background: colors.bgSecondary, color: colors.text,
+              fontSize: '13px', fontWeight: 500,
             }}
           >
             Cancel
           </button>
           <button
             onClick={save}
-            disabled={!url.trim()}
+            disabled={!hasUrl}
             style={{
-              padding: '6px 12px', borderRadius: '6px', border: 'none',
-              background: url.trim() ? '#6366f1' : '#a5b4fc',
-              color: '#fff',
-              cursor: url.trim() ? 'pointer' : 'default',
-              opacity: url.trim() ? 1 : 0.6,
+              padding: '8px 18px', borderRadius: '8px', border: 'none',
+              background: hasUrl ? colors.accentGrad : colors.bgHover,
+              color: hasUrl ? '#fff' : colors.textMuted,
+              cursor: hasUrl ? 'pointer' : 'default',
+              fontSize: '13px', fontWeight: 600,
+              opacity: hasUrl ? 1 : 0.6,
             }}
           >
             Save

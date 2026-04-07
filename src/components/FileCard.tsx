@@ -1,3 +1,5 @@
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { WorkspaceFile, Settings } from '../store/useWorkspaceStore'
 import { ColorTokens } from '../theme'
 
@@ -15,31 +17,44 @@ interface FileCardProps {
   file: WorkspaceFile
   settings: Settings
   colors: ColorTokens
-  isFirst: boolean
-  isLast: boolean
+  disabled?: boolean
   onOpen: (storedPath: string) => void
   onRemove: (fileId: string) => void
   onDelete: (fileId: string, sourcePath: string, storedPath: string) => void
-  onMoveUp: (fileId: string) => void
-  onMoveDown: (fileId: string) => void
 }
 
-export function FileCard({ file, settings, colors, isFirst, isLast, onOpen, onRemove, onDelete, onMoveUp, onMoveDown }: FileCardProps) {
+export function FileCard({ file, settings, colors, disabled, onOpen, onRemove, onDelete }: FileCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: file.id,
+    disabled,
+  })
+
   return (
     <li
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
       style={{
+        transform: CSS.Translate.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+        cursor: disabled ? 'default' : isDragging ? 'grabbing' : 'grab',
         display: 'flex',
         alignItems: 'center',
         gap: '6px',
-        padding: '6px 8px',
+        padding: '7px 10px',
         marginBottom: '4px',
-        background: colors.bgSecondary,
-        borderRadius: '6px',
+        background: colors.bgCard,
+        borderRadius: '10px',
         fontSize: '12px',
         border: `1px solid ${colors.border}`,
+        boxShadow: colors.shadow,
+        listStyle: 'none',
+        userSelect: 'none',
       }}
     >
       <span
+        onPointerDown={(e) => e.stopPropagation()}
         onClick={() => onOpen(file.storedPath)}
         style={{
           flex: 1,
@@ -48,6 +63,7 @@ export function FileCard({ file, settings, colors, isFirst, isLast, onOpen, onRe
           whiteSpace: 'nowrap',
           color: colors.text,
           cursor: 'pointer',
+          fontWeight: 500,
         }}
         title={file.originalName}
       >
@@ -64,60 +80,15 @@ export function FileCard({ file, settings, colors, isFirst, isLast, onOpen, onRe
       )}
 
       {settings.showFileSize && (
-        <span style={{ color: colors.textMuted, flexShrink: 0 }}>
+        <span style={{ color: colors.textMuted, flexShrink: 0, fontSize: '11px' }}>
           {formatSize(file.size)}
         </span>
       )}
 
       <button
-        aria-label="move up"
-        title="Move up"
-        disabled={isFirst}
-        onClick={(e) => {
-          e.stopPropagation()
-          onMoveUp(file.id)
-        }}
-        style={{
-          background: 'none',
-          border: 'none',
-          cursor: isFirst ? 'default' : 'pointer',
-          color: colors.textMuted,
-          fontSize: '11px',
-          lineHeight: 1,
-          padding: '0 2px',
-          flexShrink: 0,
-          opacity: isFirst ? 0.25 : 1,
-        }}
-      >
-        ↑
-      </button>
-
-      <button
-        aria-label="move down"
-        title="Move down"
-        disabled={isLast}
-        onClick={(e) => {
-          e.stopPropagation()
-          onMoveDown(file.id)
-        }}
-        style={{
-          background: 'none',
-          border: 'none',
-          cursor: isLast ? 'default' : 'pointer',
-          color: colors.textMuted,
-          fontSize: '11px',
-          lineHeight: 1,
-          padding: '0 2px',
-          flexShrink: 0,
-          opacity: isLast ? 0.25 : 1,
-        }}
-      >
-        ↓
-      </button>
-
-      <button
         aria-label="remove"
         title="Remove from Vanish Box"
+        onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation()
           onRemove(file.id)
@@ -127,7 +98,7 @@ export function FileCard({ file, settings, colors, isFirst, isLast, onOpen, onRe
           border: 'none',
           cursor: 'pointer',
           color: colors.textMuted,
-          fontSize: '14px',
+          fontSize: '15px',
           lineHeight: 1,
           padding: '0 2px',
           flexShrink: 0,
@@ -139,6 +110,7 @@ export function FileCard({ file, settings, colors, isFirst, isLast, onOpen, onRe
       <button
         aria-label="delete"
         title="Delete file from computer"
+        onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation()
           onDelete(file.id, file.sourcePath, file.storedPath)

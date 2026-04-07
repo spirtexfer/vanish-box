@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useWorkspaceStore, NoteCard as NoteCardType } from '../store/useWorkspaceStore'
 import { NoteCard } from './NoteCard'
 import { NoteEditor } from './NoteEditor'
+import { SortableList } from './SortableList'
 import { ColorTokens } from '../theme'
 
 interface NotesSectionProps {
@@ -10,7 +11,7 @@ interface NotesSectionProps {
 }
 
 export function NotesSection({ tabId, colors }: NotesSectionProps) {
-  const { tabs, addNote, updateNote, removeNote } = useWorkspaceStore()
+  const { tabs, addNote, updateNote, removeNote, reorderNotes } = useWorkspaceStore()
   const tab = tabs.find((t) => t.id === tabId)
   const notes = tab?.notes ?? []
   const [editingNote, setEditingNote] = useState<NoteCardType | null>(null)
@@ -31,24 +32,23 @@ export function NotesSection({ tabId, colors }: NotesSectionProps) {
       {notes.length === 0 ? (
         <div
           style={{
-            background: colors.bgSecondary,
-            border: `1px solid ${colors.border}`,
-            borderRadius: '8px',
-            padding: '12px',
+            padding: '10px 0 6px',
             textAlign: 'center',
             fontSize: '12px',
             color: colors.textMuted,
+            opacity: 0.7,
           }}
         >
           No notes yet
         </div>
       ) : (
-        <div>
+        <SortableList items={notes} onReorder={(from, to) => reorderNotes(tabId, from, to)}>
           {notes.map((note) => (
             <NoteCard
               key={note.id}
               note={note}
               colors={colors}
+              disabled={notes.length < 2}
               onEdit={setEditingNote}
               onRemove={(id) => removeNote(tabId, id)}
               onToggleCollapse={(id) =>
@@ -56,22 +56,25 @@ export function NotesSection({ tabId, colors }: NotesSectionProps) {
               }
             />
           ))}
-        </div>
+        </SortableList>
       )}
 
       <button
         onClick={() => addNote(tabId)}
         aria-label="Add note"
         style={{
-          marginTop: '6px',
+          marginTop: '4px',
           width: '100%',
           padding: '6px',
-          border: `1px dashed ${colors.border}`,
-          borderRadius: '6px',
+          border: 'none',
+          borderRadius: '8px',
           background: 'transparent',
-          color: colors.textMuted,
+          color: colors.accent,
           cursor: 'pointer',
           fontSize: '12px',
+          fontWeight: 500,
+          opacity: 0.75,
+          textAlign: 'left',
         }}
       >
         + Add note

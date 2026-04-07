@@ -164,10 +164,7 @@ pub fn update_shortcut(app_handle: tauri::AppHandle, keybind: String) -> Result<
     // Parse FIRST — if the keybind is invalid, bail before touching the registered shortcut.
     let shortcut = parse_keybind(&keybind)?;
 
-    let data_dir = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
-    std::fs::create_dir_all(&data_dir).map_err(|e| e.to_string())?;
-    std::fs::write(data_dir.join("keybind.txt"), &keybind).map_err(|e| e.to_string())?;
-
+    // Register BEFORE persisting — if registration fails the old keybind stays on disk.
     app_handle.global_shortcut().unregister_all().map_err(|e| e.to_string())?;
     app_handle
         .global_shortcut()
@@ -177,5 +174,9 @@ pub fn update_shortcut(app_handle: tauri::AppHandle, keybind: String) -> Result<
             }
         })
         .map_err(|e| e.to_string())?;
+
+    let data_dir = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(&data_dir).map_err(|e| e.to_string())?;
+    std::fs::write(data_dir.join("keybind.txt"), &keybind).map_err(|e| e.to_string())?;
     Ok(())
 }

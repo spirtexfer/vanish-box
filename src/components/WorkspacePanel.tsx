@@ -31,7 +31,7 @@ export function WorkspacePanel() {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        fontFamily: 'system-ui, sans-serif',
+        fontFamily: "'Manrope', 'Inter', system-ui, sans-serif",
         background: colors.bg,
         color: colors.text,
       }}
@@ -50,7 +50,8 @@ export function WorkspacePanel() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0,0,0,0.4)',
+            background: 'rgba(0,0,0,0.3)',
+            backdropFilter: 'blur(4px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -59,28 +60,30 @@ export function WorkspacePanel() {
         >
           <div
             style={{
-              background: colors.bg,
-              border: `1px solid ${colors.border}`,
-              borderRadius: '10px',
-              padding: '20px',
-              maxWidth: '280px',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              maxWidth: '300px',
+              width: '100%',
               textAlign: 'center',
+              boxShadow: colors.shadowModal,
             }}
           >
-            <p style={{ color: colors.text, fontSize: '13px', margin: '0 0 16px 0' }}>
-              Clear all files, notes, and sketches from this tab? This cannot be
-              undone.
+            <p style={{ color: colors.text, fontSize: '13px', margin: '0 0 20px 0', lineHeight: 1.5 }}>
+              Clear all files, notes, and sketches from this tab? This cannot be undone.
             </p>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
               <button
                 onClick={() => setConfirmClear(false)}
                 style={{
-                  padding: '6px 14px',
+                  padding: '8px 18px',
                   cursor: 'pointer',
-                  borderRadius: '6px',
-                  border: `1px solid ${colors.border}`,
-                  background: colors.bg,
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: colors.bgSecondary,
                   color: colors.text,
+                  fontSize: '13px',
+                  fontWeight: 500,
                 }}
               >
                 Cancel
@@ -89,12 +92,14 @@ export function WorkspacePanel() {
                 onClick={handleClearConfirmed}
                 aria-label="confirm clear tab"
                 style={{
-                  padding: '6px 14px',
+                  padding: '8px 18px',
                   cursor: 'pointer',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   background: '#ef4444',
                   color: '#fff',
                   border: 'none',
+                  fontSize: '13px',
+                  fontWeight: 500,
                 }}
               >
                 Clear tab
@@ -107,23 +112,31 @@ export function WorkspacePanel() {
       <header
         data-tauri-drag-region
         style={{
-          padding: '8px 12px',
-          borderBottom: `1px solid ${colors.border}`,
+          padding: '10px 14px',
+          boxShadow: `0 1px 0 ${colors.border}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          fontWeight: 600,
-          fontSize: '13px',
           flexShrink: 0,
           cursor: 'grab',
           WebkitAppRegion: 'drag',
+          background: colors.bg,
         } as React.CSSProperties}
       >
-        <span>Vanish Box</span>
+        <span
+          style={{
+            fontWeight: 700,
+            fontSize: '13px',
+            letterSpacing: '-0.01em',
+            color: colors.accent,
+          }}
+        >
+          Vanish Box
+        </span>
         <div
           style={{
             display: 'flex',
-            gap: '6px',
+            gap: '2px',
             alignItems: 'center',
             WebkitAppRegion: 'no-drag',
           } as React.CSSProperties}
@@ -136,7 +149,13 @@ export function WorkspacePanel() {
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              fontSize: '13px',
+              width: '28px',
+              height: '28px',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '14px',
               color: colors.textMuted,
             }}
           >
@@ -149,6 +168,12 @@ export function WorkspacePanel() {
               background: 'none',
               border: 'none',
               cursor: 'pointer',
+              width: '28px',
+              height: '28px',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               fontSize: '14px',
               color: colors.textMuted,
             }}

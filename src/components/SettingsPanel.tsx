@@ -3,6 +3,8 @@ import { invoke } from '@tauri-apps/api/core'
 import { Settings } from '../store/useWorkspaceStore'
 import { ColorTokens } from '../theme'
 
+const VALID_KEY_RE = /^([a-z0-9]|f([1-9]|1[0-2])|space)$/
+
 function KeybindCapture({
   keybind,
   colors,
@@ -27,8 +29,7 @@ function KeybindCapture({
 
     // Normalize spacebar; map e.key to the token str_to_code expects
     const rawKey = e.key === ' ' ? 'space' : e.key.toLowerCase()
-    // Only accept keys that the Rust str_to_code supports
-    const valid = /^([a-z0-9]|f([1-9]|1[0-2])|space)$/.test(rawKey)
+    const valid = VALID_KEY_RE.test(rawKey)
     if (!valid) return
 
     parts.push(rawKey)
@@ -37,8 +38,8 @@ function KeybindCapture({
   }
 
   return (
-    <div style={{ fontSize: '12px', color: colors.text, marginTop: '4px' }}>
-      <div style={{ marginBottom: '4px' }}>Global shortcut</div>
+    <div style={{ fontSize: '12px', color: colors.text }}>
+      <div style={{ marginBottom: '6px', fontWeight: 500 }}>Global shortcut</div>
       <input
         readOnly
         value={capturing ? 'Press keys…' : keybind}
@@ -48,9 +49,9 @@ function KeybindCapture({
         aria-label="keybind capture"
         style={{
           width: '100%',
-          padding: '4px 8px',
-          border: `1px solid ${capturing ? '#6366f1' : colors.border}`,
-          borderRadius: '6px',
+          padding: '8px 10px',
+          border: `1px solid ${capturing ? colors.accent : colors.border}`,
+          borderRadius: '8px',
           background: colors.bgSecondary,
           color: colors.text,
           fontSize: '12px',
@@ -58,9 +59,10 @@ function KeybindCapture({
           outline: 'none',
           boxSizing: 'border-box',
           fontFamily: 'monospace',
+          transition: 'border-color 0.15s',
         }}
       />
-      <div style={{ fontSize: '11px', color: colors.textMuted, marginTop: '2px' }}>
+      <div style={{ fontSize: '11px', color: colors.textMuted, marginTop: '4px' }}>
         Click and press a key combination to change
       </div>
     </div>
@@ -75,12 +77,23 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ settings, colors, onUpdate, onClose }: SettingsPanelProps) {
+  const toggleStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    fontSize: '13px',
+    color: colors.text,
+    cursor: 'pointer',
+    padding: '4px 0',
+  }
+
   return (
     <div
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.4)',
+        background: 'rgba(0,0,0,0.25)',
+        backdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'flex-end',
         justifyContent: 'center',
@@ -91,37 +104,53 @@ export function SettingsPanel({ settings, colors, onUpdate, onClose }: SettingsP
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: colors.bg,
-          border: `1px solid ${colors.border}`,
-          borderRadius: '12px 12px 0 0',
-          padding: '16px',
+          background: colors.bgCard,
+          borderRadius: '16px 16px 0 0',
+          padding: '20px 20px 24px',
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
-          gap: '10px',
+          gap: '14px',
+          boxShadow: colors.shadowModal,
         }}
       >
-        <h3
-          style={{
-            margin: 0,
-            fontSize: '13px',
-            fontWeight: 600,
-            color: colors.text,
-          }}
-        >
-          Settings
-        </h3>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h3
+            style={{
+              margin: 0,
+              fontSize: '14px',
+              fontWeight: 700,
+              color: colors.text,
+              letterSpacing: '-0.01em',
+            }}
+          >
+            Settings
+          </h3>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: colors.textMuted,
+              fontSize: '18px',
+              lineHeight: 1,
+              padding: '0 2px',
+            }}
+          >
+            ×
+          </button>
+        </div>
 
-        <label
+        <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: '12px',
-            color: colors.text,
-            cursor: 'pointer',
+            height: '1px',
+            background: colors.border,
+            margin: '-4px 0',
           }}
-        >
+        />
+
+        <label style={toggleStyle}>
           Dark mode
           <input
             type="checkbox"
@@ -130,16 +159,7 @@ export function SettingsPanel({ settings, colors, onUpdate, onClose }: SettingsP
           />
         </label>
 
-        <label
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: '12px',
-            color: colors.text,
-            cursor: 'pointer',
-          }}
-        >
+        <label style={toggleStyle}>
           Show file size
           <input
             type="checkbox"
@@ -148,16 +168,7 @@ export function SettingsPanel({ settings, colors, onUpdate, onClose }: SettingsP
           />
         </label>
 
-        <label
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: '12px',
-            color: colors.text,
-            cursor: 'pointer',
-          }}
-        >
+        <label style={toggleStyle}>
           Show file time added
           <input
             type="checkbox"

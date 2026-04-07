@@ -21,16 +21,24 @@ export function TabContent({ tab, colors }: TabContentProps) {
   return (
     <div
       style={{
-        flex: 1, overflowY: 'auto', padding: '12px',
-        display: 'flex', flexDirection: 'column', gap: '16px',
+        flex: 1,
+        overflowY: 'auto',
+        padding: '14px 12px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px',
       }}
     >
       {tab.sections.map((section) => (
         <section key={section.type}>
           <h3
             style={{
-              margin: '0 0 6px 0', fontSize: '11px', fontWeight: 600,
-              textTransform: 'uppercase', letterSpacing: '0.05em', color: colors.textMuted,
+              margin: '0 0 8px 0',
+              fontSize: '10px',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              color: colors.textMuted,
             }}
           >
             {sectionLabel[section.type]}
