@@ -9,6 +9,31 @@ pub struct CopiedFileInfo {
     pub size: u64,
 }
 
+fn os_open(target: &str) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("cmd")
+            .args(["/c", "start", "", target])
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(target)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(target)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 /// Copy a file from `source` into the app's managed files directory.
 /// Returns metadata about the copied file including its new path.
 #[tauri::command]
@@ -41,8 +66,7 @@ pub fn copy_file(
     let stored_name = format!("{}_{}", ts, original_name);
     let dest = files_dir.join(&stored_name);
 
-    std::fs::copy(source_path, &dest).map_err(|e| e.to_string())?;
-    let size = std::fs::metadata(&dest).map(|m| m.len()).unwrap_or(0);
+    let size = std::fs::copy(source_path, &dest).map_err(|e| e.to_string())?;
 
     let stored_path = dest.to_string_lossy().to_string();
     Ok(CopiedFileInfo {
@@ -57,55 +81,13 @@ pub fn copy_file(
 /// Open a file with the default OS application.
 #[tauri::command]
 pub fn open_file(path: String) -> Result<(), String> {
-    #[cfg(target_os = "windows")]
-    {
-        std::process::Command::new("cmd")
-            .args(["/c", "start", "", &path])
-            .spawn()
-            .map_err(|e| e.to_string())?;
-    }
-    #[cfg(target_os = "macos")]
-    {
-        std::process::Command::new("open")
-            .arg(&path)
-            .spawn()
-            .map_err(|e| e.to_string())?;
-    }
-    #[cfg(target_os = "linux")]
-    {
-        std::process::Command::new("xdg-open")
-            .arg(&path)
-            .spawn()
-            .map_err(|e| e.to_string())?;
-    }
-    Ok(())
+    os_open(&path)
 }
 
 /// Open a URL in the system's default browser.
 #[tauri::command]
 pub fn open_url(url: String) -> Result<(), String> {
-    #[cfg(target_os = "windows")]
-    {
-        std::process::Command::new("cmd")
-            .args(["/c", "start", "", &url])
-            .spawn()
-            .map_err(|e| e.to_string())?;
-    }
-    #[cfg(target_os = "macos")]
-    {
-        std::process::Command::new("open")
-            .arg(&url)
-            .spawn()
-            .map_err(|e| e.to_string())?;
-    }
-    #[cfg(target_os = "linux")]
-    {
-        std::process::Command::new("xdg-open")
-            .arg(&url)
-            .spawn()
-            .map_err(|e| e.to_string())?;
-    }
-    Ok(())
+    os_open(&url)
 }
 
 /// Permanently delete a file from the app's managed storage.
@@ -118,7 +100,9 @@ pub fn delete_file(path: String) -> Result<(), String> {
 #[tauri::command]
 pub fn trash_file(source_path: String, stored_path: String) -> Result<(), String> {
     trash::delete(&source_path).map_err(|e| e.to_string())?;
-    let _ = std::fs::remove_file(&stored_path);
+    if let Err(e) = std::fs::remove_file(&stored_path) {
+        eprintln!("[VanishBox] Failed to delete stored copy at {stored_path}: {e}");
+    }
     Ok(())
 }
 
@@ -167,18 +151,16 @@ pub fn parse_keybind(keybind: &str) -> Result<tauri_plugin_global_shortcut::Shor
 }
 
 /// Unregister all shortcuts, register a new one, and persist the keybind to disk
-/// so setup_shortcut can read it on next launch (eliminating the startup gap).
+/// so setup_shortcut can read it on next launch.
 #[tauri::command]
 pub fn update_shortcut(app_handle: tauri::AppHandle, keybind: String) -> Result<(), String> {
     use tauri::Manager;
     use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
-    // Persist to disk for startup read
     let data_dir = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
     std::fs::create_dir_all(&data_dir).map_err(|e| e.to_string())?;
     std::fs::write(data_dir.join("keybind.txt"), &keybind).map_err(|e| e.to_string())?;
 
-    // Re-register shortcut
     app_handle.global_shortcut().unregister_all().map_err(|e| e.to_string())?;
     let shortcut = parse_keybind(&keybind)?;
     app_handle

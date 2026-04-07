@@ -1,4 +1,3 @@
-// src/components/TabBar.tsx
 import { useState } from 'react'
 import { useWorkspaceStore, TAB_COLORS, TAB_NAME_MAX_LEN, Tab, TabColor } from '../store/useWorkspaceStore'
 import { ColorTokens, TAB_COLOR_VALUES } from '../theme'

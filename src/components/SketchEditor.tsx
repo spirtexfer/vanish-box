@@ -1,6 +1,8 @@
 import { useRef, useState, useEffect } from 'react'
 import { ColorTokens } from '../theme'
 
+const MAX_HISTORY = 50
+
 interface SketchEditorProps {
   dataUrl: string | null
   colors: ColorTokens
@@ -8,14 +10,22 @@ interface SketchEditorProps {
   onClose: () => void
 }
 
+function drawDataUrl(ctx: CanvasRenderingContext2D, src: string, onDone?: () => void) {
+  const img = new Image()
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0)
+    onDone?.()
+  }
+  img.src = src
+}
+
 export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [tool, setTool] = useState<'pen' | 'eraser'>('pen')
   const [brushSize, setBrushSize] = useState(3)
-  const [isDrawing, setIsDrawing] = useState(false)
   const lastPos = useRef<{ x: number; y: number } | null>(null)
+  const hasMoved = useRef(false)
 
-  // undo/redo history
   const historySnaps = useRef<string[]>([])
   const historyIdxRef = useRef(-1)
   const [canUndo, setCanUndo] = useState(false)
@@ -30,12 +40,7 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
     ctx.fillStyle = '#ffffff'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     if (dataUrl) {
-      const img = new Image()
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0)
-        pushHistory()
-      }
-      img.src = dataUrl
+      drawDataUrl(ctx, dataUrl, pushHistory)
     } else {
       pushHistory()
     }
@@ -45,8 +50,8 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
     const canvas = canvasRef.current
     if (!canvas) return
     const snap = canvas.toDataURL('image/png')
-    historySnaps.current = historySnaps.current.slice(0, historyIdxRef.current + 1)
-    historySnaps.current.push(snap)
+    const sliced = historySnaps.current.slice(0, historyIdxRef.current + 1)
+    historySnaps.current = [...sliced, snap].slice(-MAX_HISTORY)
     historyIdxRef.current = historySnaps.current.length - 1
     setCanUndo(historyIdxRef.current > 0)
     setCanRedo(false)
@@ -57,9 +62,7 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    const img = new Image()
-    img.onload = () => ctx.drawImage(img, 0, 0)
-    img.src = historySnaps.current[idx]
+    drawDataUrl(ctx, historySnaps.current[idx])
   }
 
   function undo() {
@@ -104,12 +107,13 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
   }
 
   function onMouseDown(e: React.MouseEvent<HTMLCanvasElement>) {
-    setIsDrawing(true)
+    hasMoved.current = false
     lastPos.current = getPos(e)
   }
 
   function onMouseMove(e: React.MouseEvent<HTMLCanvasElement>) {
-    if (!isDrawing || !lastPos.current) return
+    if (!lastPos.current) return
+    hasMoved.current = true
     const canvas = canvasRef.current!
     const ctx = canvas.getContext('2d')!
     const pos = getPos(e)
@@ -125,8 +129,7 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
   }
 
   function stopDrawing() {
-    if (lastPos.current !== null) pushHistory()
-    setIsDrawing(false)
+    if (lastPos.current !== null && hasMoved.current) pushHistory()
     lastPos.current = null
   }
 

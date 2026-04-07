@@ -127,6 +127,10 @@ interface WorkspaceStore {
   reset: () => void
 }
 
+function hostnameOrUrl(url: string): string {
+  try { return new URL(url).hostname } catch { return url }
+}
+
 export function migrateStore(state: any, fromVersion: number): any {
   if (fromVersion === 0) {
     return {
@@ -317,9 +321,7 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
           })),
 
         addLink: (tabId, url, title) => {
-          const derivedTitle = title.trim() || (() => {
-            try { return new URL(url).hostname } catch { return url }
-          })()
+          const derivedTitle = title.trim() || hostnameOrUrl(url)
           const link: LinkItem = {
             id: crypto.randomUUID(),
             title: derivedTitle,
