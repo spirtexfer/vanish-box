@@ -13,7 +13,6 @@ fn main() {
             commands::copy_file,
             commands::open_file,
             commands::open_url,
-            commands::delete_file,
             commands::trash_file,
             commands::update_shortcut,
         ])

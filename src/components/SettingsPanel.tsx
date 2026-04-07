@@ -21,12 +21,19 @@ function KeybindCapture({
     if (e.shiftKey) parts.push('shift')
     if (e.altKey) parts.push('alt')
     if (e.metaKey) parts.push('super')
-    const key = e.key.toLowerCase()
-    if (!['control', 'shift', 'alt', 'meta'].includes(key)) {
-      parts.push(key)
-      onCapture(parts.join('+'))
-      setCapturing(false)
-    }
+
+    // Require at least one modifier — bare keys are not safe as global shortcuts
+    if (parts.length === 0) return
+
+    // Normalize spacebar; map e.key to the token str_to_code expects
+    const rawKey = e.key === ' ' ? 'space' : e.key.toLowerCase()
+    // Only accept keys that the Rust str_to_code supports
+    const valid = /^([a-z0-9]|f([1-9]|1[0-2])|space)$/.test(rawKey)
+    if (!valid) return
+
+    parts.push(rawKey)
+    onCapture(parts.join('+'))
+    setCapturing(false)
   }
 
   return (

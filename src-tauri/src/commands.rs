@@ -97,9 +97,13 @@ pub fn delete_file(path: String) -> Result<(), String> {
 }
 
 /// Move the original source file to the system trash and delete the app's stored copy.
+/// If source_path is empty (files imported before sourcePath tracking was added), only
+/// the stored copy is deleted.
 #[tauri::command]
 pub fn trash_file(source_path: String, stored_path: String) -> Result<(), String> {
-    trash::delete(&source_path).map_err(|e| e.to_string())?;
+    if !source_path.is_empty() {
+        trash::delete(&source_path).map_err(|e| e.to_string())?;
+    }
     if let Err(e) = std::fs::remove_file(&stored_path) {
         eprintln!("[VanishBox] Failed to delete stored copy at {stored_path}: {e}");
     }
@@ -157,12 +161,14 @@ pub fn update_shortcut(app_handle: tauri::AppHandle, keybind: String) -> Result<
     use tauri::Manager;
     use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
+    // Parse FIRST — if the keybind is invalid, bail before touching the registered shortcut.
+    let shortcut = parse_keybind(&keybind)?;
+
     let data_dir = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
     std::fs::create_dir_all(&data_dir).map_err(|e| e.to_string())?;
     std::fs::write(data_dir.join("keybind.txt"), &keybind).map_err(|e| e.to_string())?;
 
     app_handle.global_shortcut().unregister_all().map_err(|e| e.to_string())?;
-    let shortcut = parse_keybind(&keybind)?;
     app_handle
         .global_shortcut()
         .on_shortcut(shortcut, |app_handle, _shortcut, event| {

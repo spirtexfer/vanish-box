@@ -15,6 +15,8 @@ interface FileCardProps {
   file: WorkspaceFile
   settings: Settings
   colors: ColorTokens
+  isFirst: boolean
+  isLast: boolean
   onOpen: (storedPath: string) => void
   onRemove: (fileId: string) => void
   onDelete: (fileId: string, sourcePath: string, storedPath: string) => void
@@ -22,7 +24,7 @@ interface FileCardProps {
   onMoveDown: (fileId: string) => void
 }
 
-export function FileCard({ file, settings, colors, onOpen, onRemove, onDelete, onMoveUp, onMoveDown }: FileCardProps) {
+export function FileCard({ file, settings, colors, isFirst, isLast, onOpen, onRemove, onDelete, onMoveUp, onMoveDown }: FileCardProps) {
   return (
     <li
       style={{
@@ -70,6 +72,7 @@ export function FileCard({ file, settings, colors, onOpen, onRemove, onDelete, o
       <button
         aria-label="move up"
         title="Move up"
+        disabled={isFirst}
         onClick={(e) => {
           e.stopPropagation()
           onMoveUp(file.id)
@@ -77,12 +80,13 @@ export function FileCard({ file, settings, colors, onOpen, onRemove, onDelete, o
         style={{
           background: 'none',
           border: 'none',
-          cursor: 'pointer',
+          cursor: isFirst ? 'default' : 'pointer',
           color: colors.textMuted,
           fontSize: '11px',
           lineHeight: 1,
           padding: '0 2px',
           flexShrink: 0,
+          opacity: isFirst ? 0.25 : 1,
         }}
       >
         ↑
@@ -91,6 +95,7 @@ export function FileCard({ file, settings, colors, onOpen, onRemove, onDelete, o
       <button
         aria-label="move down"
         title="Move down"
+        disabled={isLast}
         onClick={(e) => {
           e.stopPropagation()
           onMoveDown(file.id)
@@ -98,12 +103,13 @@ export function FileCard({ file, settings, colors, onOpen, onRemove, onDelete, o
         style={{
           background: 'none',
           border: 'none',
-          cursor: 'pointer',
+          cursor: isLast ? 'default' : 'pointer',
           color: colors.textMuted,
           fontSize: '11px',
           lineHeight: 1,
           padding: '0 2px',
           flexShrink: 0,
+          opacity: isLast ? 0.25 : 1,
         }}
       >
         ↓

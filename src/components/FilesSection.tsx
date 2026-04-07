@@ -134,7 +134,7 @@ export function FilesSection({ tabId, colors }: FilesSectionProps) {
                 margin: '0 0 16px 0',
               }}
             >
-              Delete this file from your computer? This cannot be undone.
+              Move original file to Trash and remove the stored copy? The stored copy cannot be recovered.
             </p>
             <div
               style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}
@@ -196,12 +196,14 @@ export function FilesSection({ tabId, colors }: FilesSectionProps) {
           </div>
         ) : (
           <ul style={{ margin: 0, padding: '6px', listStyle: 'none' }}>
-            {files.map((file) => (
+            {files.map((file, idx) => (
               <FileCard
                 key={file.id}
                 file={file}
                 settings={settings}
                 colors={colors}
+                isFirst={idx === 0}
+                isLast={idx === files.length - 1}
                 onOpen={handleOpen}
                 onRemove={(id) => removeFile(tabId, id)}
                 onDelete={(id, sourcePath, storedPath) => setDeleteConfirm({ fileId: id, sourcePath, storedPath })}

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LinkItem } from '../store/useWorkspaceStore'
+import { LinkItem, hostnameOrUrl } from '../store/useWorkspaceStore'
 import { ColorTokens } from '../theme'
 
 interface LinkEditorProps {
@@ -14,10 +14,8 @@ export function LinkEditor({ link, colors, onSave, onClose }: LinkEditorProps) {
   const [url, setUrl] = useState(link.url)
 
   function save() {
-    const derivedTitle = title.trim() || (() => {
-      try { return new URL(url).hostname } catch { return url }
-    })()
-    onSave({ title: derivedTitle, url })
+    if (!url.trim()) return
+    onSave({ title: title.trim() || hostnameOrUrl(url), url: url.trim() })
     onClose()
   }
 
@@ -70,9 +68,13 @@ export function LinkEditor({ link, colors, onSave, onClose }: LinkEditorProps) {
           </button>
           <button
             onClick={save}
+            disabled={!url.trim()}
             style={{
-              padding: '6px 12px', cursor: 'pointer', borderRadius: '6px',
-              background: '#6366f1', color: '#fff', border: 'none',
+              padding: '6px 12px', borderRadius: '6px', border: 'none',
+              background: url.trim() ? '#6366f1' : '#a5b4fc',
+              color: '#fff',
+              cursor: url.trim() ? 'pointer' : 'default',
+              opacity: url.trim() ? 1 : 0.6,
             }}
           >
             Save

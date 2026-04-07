@@ -127,7 +127,7 @@ interface WorkspaceStore {
   reset: () => void
 }
 
-function hostnameOrUrl(url: string): string {
+export function hostnameOrUrl(url: string): string {
   try { return new URL(url).hostname } catch { return url }
 }
 
@@ -138,6 +138,10 @@ export function migrateStore(state: any, fromVersion: number): any {
       tabs: (state.tabs ?? []).map((tab: any) => ({
         ...tab,
         links: tab.links ?? [],
+        files: (tab.files ?? []).map((f: any) => ({
+          ...f,
+          sourcePath: f.sourcePath ?? '',
+        })),
         sections: (tab.sections ?? []).some((s: any) => s.type === 'links')
           ? tab.sections
           : [...(tab.sections ?? []), { type: 'links', layout: 'list' }],
