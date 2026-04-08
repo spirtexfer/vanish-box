@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useWorkspaceStore, SketchCard as SketchCardType } from '../store/useWorkspaceStore'
 import { SketchCard } from './SketchCard'
 import { SketchEditor } from './SketchEditor'
+import { MoveItemModal } from './MoveItemModal'
 import { SortableList } from './SortableList'
 import { ColorTokens } from '../theme'
 import { sortPinned } from '../utils/sortPinned'
@@ -12,14 +13,24 @@ interface SketchesSectionProps {
 }
 
 export function SketchesSection({ tabId, colors }: SketchesSectionProps) {
-  const { tabs, addSketch, updateSketch, removeSketch, reorderSketches } = useWorkspaceStore()
+  const { tabs, addSketch, updateSketch, removeSketch, reorderSketches, moveSketch } = useWorkspaceStore()
   const tab = tabs.find((t) => t.id === tabId)
   const sketches = tab?.sketches ?? []
   const sorted = sortPinned(sketches)
   const [editingSketch, setEditingSketch] = useState<SketchCardType | null>(null)
+  const [movingSketchId, setMovingSketchId] = useState<string | null>(null)
 
   return (
     <div>
+      {movingSketchId && (
+        <MoveItemModal
+          tabs={tabs}
+          currentTabId={tabId}
+          colors={colors}
+          onMove={(targetTabId) => moveSketch(tabId, targetTabId, movingSketchId)}
+          onClose={() => setMovingSketchId(null)}
+        />
+      )}
       {editingSketch && (
         <SketchEditor
           dataUrl={editingSketch.dataUrl}
@@ -69,6 +80,7 @@ export function SketchesSection({ tabId, colors }: SketchesSectionProps) {
                 updateSketch(tabId, id, { collapsed: !sketch.collapsed })
               }
               onTogglePin={(id) => updateSketch(tabId, id, { pinned: !sorted.find(s => s.id === id)?.pinned })}
+              onMove={setMovingSketchId}
             />
           ))}
         </SortableList>

@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { useWorkspaceStore, WorkspaceFile } from '../store/useWorkspaceStore'
 import { FileCard } from './FileCard'
+import { MoveItemModal } from './MoveItemModal'
 import { SortableList } from './SortableList'
 import { ColorTokens } from '../theme'
 import { sortPinned } from '../utils/sortPinned'
@@ -22,12 +23,13 @@ interface FilesSectionProps {
 }
 
 export function FilesSection({ tabId, colors }: FilesSectionProps) {
-  const { tabs, settings, addFiles, removeFile, reorderFiles, updateFile } = useWorkspaceStore()
+  const { tabs, settings, addFiles, removeFile, reorderFiles, updateFile, moveFile } = useWorkspaceStore()
   const tab = tabs.find((t) => t.id === tabId)
   const files = tab?.files ?? []
   const sorted = sortPinned(files)
 
   const [isDraggingOver, setIsDraggingOver] = useState(false)
+  const [movingFileId, setMovingFileId] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<{
     fileId: string
     sourcePath: string
@@ -129,6 +131,15 @@ export function FilesSection({ tabId, colors }: FilesSectionProps) {
 
   return (
     <>
+      {movingFileId && (
+        <MoveItemModal
+          tabs={tabs}
+          currentTabId={tabId}
+          colors={colors}
+          onMove={(targetTabId) => moveFile(tabId, targetTabId, movingFileId)}
+          onClose={() => setMovingFileId(null)}
+        />
+      )}
       {deleteConfirm && (
         <div
           className="vb-overlay"
@@ -252,6 +263,7 @@ export function FilesSection({ tabId, colors }: FilesSectionProps) {
                     setDeleteConfirm({ fileId: id, sourcePath, storedPath })
                   }
                   onTogglePin={(id) => updateFile(tabId, id, { pinned: !sorted.find(f => f.id === id)?.pinned })}
+                  onMove={setMovingFileId}
                 />
               ))}
             </ul>

@@ -11,9 +11,10 @@ interface LinkCardProps {
   onEdit: (link: LinkItem) => void
   onRemove: (linkId: string) => void
   onTogglePin: (linkId: string) => void
+  onMove: (linkId: string) => void
 }
 
-export function LinkCard({ link, colors, disabled, onOpen, onEdit, onRemove, onTogglePin }: LinkCardProps) {
+export function LinkCard({ link, colors, disabled, onOpen, onEdit, onRemove, onTogglePin, onMove }: LinkCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: link.id,
     disabled,
@@ -107,6 +108,20 @@ export function LinkCard({ link, colors, disabled, onOpen, onEdit, onRemove, onT
         }}
       >
         📌
+      </button>
+
+      <button
+        aria-label="move link"
+        title="Move to tab…"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => { e.stopPropagation(); onMove(link.id) }}
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: colors.textMuted, fontSize: '11px', lineHeight: 1,
+          padding: '0 2px', flexShrink: 0, opacity: 0.5,
+        }}
+      >
+        ↗
       </button>
 
       <button

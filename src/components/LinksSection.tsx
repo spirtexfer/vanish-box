@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { useWorkspaceStore, LinkItem } from '../store/useWorkspaceStore'
 import { LinkCard } from './LinkCard'
 import { LinkEditor } from './LinkEditor'
+import { MoveItemModal } from './MoveItemModal'
 import { SortableList } from './SortableList'
 import { ColorTokens } from '../theme'
 import { sortPinned } from '../utils/sortPinned'
@@ -13,11 +14,12 @@ interface LinksSectionProps {
 }
 
 export function LinksSection({ tabId, colors }: LinksSectionProps) {
-  const { tabs, addLink, updateLink, removeLink, reorderLinks } = useWorkspaceStore()
+  const { tabs, addLink, updateLink, removeLink, reorderLinks, moveLink } = useWorkspaceStore()
   const tab = tabs.find((t) => t.id === tabId)
   const links = tab?.links ?? []
   const sorted = sortPinned(links)
   const [editing, setEditing] = useState<LinkItem | 'new' | null>(null)
+  const [movingLinkId, setMovingLinkId] = useState<string | null>(null)
 
   function handleOpen(url: string) {
     invoke('open_url', { url }).catch((e) =>
@@ -37,6 +39,15 @@ export function LinksSection({ tabId, colors }: LinksSectionProps) {
 
   return (
     <div>
+      {movingLinkId && (
+        <MoveItemModal
+          tabs={tabs}
+          currentTabId={tabId}
+          colors={colors}
+          onMove={(targetTabId) => moveLink(tabId, targetTabId, movingLinkId)}
+          onClose={() => setMovingLinkId(null)}
+        />
+      )}
       {editing !== null && (
         <LinkEditor
           link={editing === 'new' ? blankLink : editing}
@@ -81,6 +92,7 @@ export function LinksSection({ tabId, colors }: LinksSectionProps) {
               onEdit={setEditing}
               onRemove={(id) => removeLink(tabId, id)}
               onTogglePin={(id) => updateLink(tabId, id, { pinned: !sorted.find(l => l.id === id)?.pinned })}
+              onMove={setMovingLinkId}
             />
           ))}
         </SortableList>

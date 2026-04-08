@@ -11,9 +11,10 @@ interface SketchCardProps {
   onRemove: (sketchId: string) => void
   onToggleCollapse: (sketchId: string) => void
   onTogglePin: (sketchId: string) => void
+  onMove: (sketchId: string) => void
 }
 
-export function SketchCard({ sketch, colors, disabled, onEdit, onRemove, onToggleCollapse, onTogglePin }: SketchCardProps) {
+export function SketchCard({ sketch, colors, disabled, onEdit, onRemove, onToggleCollapse, onTogglePin, onMove }: SketchCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: sketch.id,
     disabled,
@@ -95,6 +96,19 @@ export function SketchCard({ sketch, colors, disabled, onEdit, onRemove, onToggl
           }}
         >
           📌
+        </button>
+        <button
+          aria-label="move sketch"
+          title="Move to tab…"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); onMove(sketch.id) }}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: colors.textMuted, fontSize: '11px', lineHeight: 1,
+            padding: '0 2px', flexShrink: 0, opacity: 0.5,
+          }}
+        >
+          ↗
         </button>
         <button
           aria-label="remove sketch"

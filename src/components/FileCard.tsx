@@ -22,9 +22,10 @@ interface FileCardProps {
   onRemove: (fileId: string) => void
   onDelete: (fileId: string, sourcePath: string, storedPath: string) => void
   onTogglePin: (fileId: string) => void
+  onMove: (fileId: string) => void
 }
 
-export function FileCard({ file, settings, colors, disabled, onOpen, onRemove, onDelete, onTogglePin }: FileCardProps) {
+export function FileCard({ file, settings, colors, disabled, onOpen, onRemove, onDelete, onTogglePin, onMove }: FileCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: file.id,
     disabled,
@@ -101,6 +102,20 @@ export function FileCard({ file, settings, colors, disabled, onOpen, onRemove, o
         }}
       >
         📌
+      </button>
+
+      <button
+        aria-label="move file"
+        title="Move to tab…"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => { e.stopPropagation(); onMove(file.id) }}
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: colors.textMuted, fontSize: '11px', lineHeight: 1,
+          padding: '0 2px', flexShrink: 0, opacity: 0.5,
+        }}
+      >
+        ↗
       </button>
 
       <button
