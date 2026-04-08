@@ -20,6 +20,7 @@ export interface WorkspaceFile {
   sourcePath: string
   size: number
   addedAt: number
+  pinned?: boolean
 }
 
 export interface NoteCard {
@@ -29,6 +30,7 @@ export interface NoteCard {
   collapsed: boolean
   createdAt: number
   updatedAt: number
+  pinned?: boolean
 }
 
 export interface SketchCard {
@@ -38,6 +40,7 @@ export interface SketchCard {
   collapsed: boolean
   createdAt: number
   updatedAt: number
+  pinned?: boolean
 }
 
 export interface LinkItem {
@@ -45,6 +48,7 @@ export interface LinkItem {
   title: string
   url: string
   createdAt: number
+  pinned?: boolean
 }
 
 export interface Tab {
@@ -109,6 +113,7 @@ interface WorkspaceStore {
 
   addFiles: (tabId: string, files: WorkspaceFile[]) => void
   removeFile: (tabId: string, fileId: string) => void
+  updateFile: (tabId: string, fileId: string, patch: Partial<Pick<WorkspaceFile, 'pinned'>>) => void
 
   reorderTabs: (fromIndex: number, toIndex: number) => void
   reorderFiles: (tabId: string, fromIndex: number, toIndex: number) => void
@@ -117,15 +122,15 @@ interface WorkspaceStore {
   reorderLinks: (tabId: string, fromIndex: number, toIndex: number) => void
 
   addNote: (tabId: string) => void
-  updateNote: (tabId: string, noteId: string, patch: Partial<Pick<NoteCard, 'title' | 'body' | 'collapsed'>>) => void
+  updateNote: (tabId: string, noteId: string, patch: Partial<Pick<NoteCard, 'title' | 'body' | 'collapsed' | 'pinned'>>) => void
   removeNote: (tabId: string, noteId: string) => void
 
   addSketch: (tabId: string) => void
-  updateSketch: (tabId: string, sketchId: string, patch: Partial<Pick<SketchCard, 'title' | 'dataUrl' | 'collapsed'>>) => void
+  updateSketch: (tabId: string, sketchId: string, patch: Partial<Pick<SketchCard, 'title' | 'dataUrl' | 'collapsed' | 'pinned'>>) => void
   removeSketch: (tabId: string, sketchId: string) => void
 
   addLink: (tabId: string, url: string, title: string) => void
-  updateLink: (tabId: string, linkId: string, patch: Partial<Pick<LinkItem, 'title' | 'url'>>) => void
+  updateLink: (tabId: string, linkId: string, patch: Partial<Pick<LinkItem, 'title' | 'url' | 'pinned'>>) => void
   removeLink: (tabId: string, linkId: string) => void
 
   updateSettings: (s: Partial<Settings>) => void
@@ -159,6 +164,10 @@ export function migrateStore(state: any, fromVersion: number): any {
           : [...(tab.sections ?? []), { type: 'links', layout: 'list' }],
       })),
     }
+  }
+  // v1 → v2: pinned fields are optional, no transformation needed
+  if (fromVersion === 1) {
+    return state
   }
   return state
 }
@@ -234,6 +243,15 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
             tabs: state.tabs.map((t) =>
               t.id === tabId
                 ? { ...t, files: t.files.filter((f) => f.id !== fileId) }
+                : t
+            ),
+          })),
+
+        updateFile: (tabId, fileId, patch) =>
+          set((state) => ({
+            tabs: state.tabs.map((t) =>
+              t.id === tabId
+                ? { ...t, files: t.files.map((f) => f.id === fileId ? { ...f, ...patch } : f) }
                 : t
             ),
           })),
@@ -395,6 +413,6 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
         },
       }
     },
-    { name: 'vanish-box-workspace', version: 1, migrate: migrateStore }
+    { name: 'vanish-box-workspace', version: 2, migrate: migrateStore }
   )
 )
