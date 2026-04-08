@@ -6,6 +6,8 @@ import { MoveItemModal } from './MoveItemModal'
 import { SortableList } from './SortableList'
 import { ColorTokens } from '../theme'
 import { sortPinned } from '../utils/sortPinned'
+import { useUndoStore } from '../store/useUndoStore'
+import { UndoToast } from './UndoToast'
 
 interface SketchesSectionProps {
   tabId: string
@@ -13,12 +15,14 @@ interface SketchesSectionProps {
 }
 
 export function SketchesSection({ tabId, colors }: SketchesSectionProps) {
-  const { tabs, addSketch, updateSketch, removeSketch, reorderSketches, moveSketch } = useWorkspaceStore()
+  const { tabs, addSketch, updateSketch, removeSketch, reorderSketches, moveSketch, restoreSketch } = useWorkspaceStore()
   const tab = tabs.find((t) => t.id === tabId)
   const sketches = tab?.sketches ?? []
   const sorted = sortPinned(sketches)
   const [editingSketch, setEditingSketch] = useState<SketchCardType | null>(null)
   const [movingSketchId, setMovingSketchId] = useState<string | null>(null)
+  const { push: pushUndo } = useUndoStore()
+  const [undoVisible, setUndoVisible] = useState(false)
 
   return (
     <div>
@@ -40,6 +44,23 @@ export function SketchesSection({ tabId, colors }: SketchesSectionProps) {
             setEditingSketch(null)
           }}
           onClose={() => setEditingSketch(null)}
+        />
+      )}
+      {undoVisible && (
+        <UndoToast
+          message="Sketch removed"
+          colors={colors}
+          onUndo={() => {
+            const entry = useUndoStore.getState().pop()
+            if (entry && entry.type === 'sketch') {
+              restoreSketch(entry.tabId, entry.item as SketchCardType)
+            }
+            setUndoVisible(false)
+          }}
+          onDismiss={() => {
+            useUndoStore.getState().pop()
+            setUndoVisible(false)
+          }}
         />
       )}
 
@@ -75,7 +96,14 @@ export function SketchesSection({ tabId, colors }: SketchesSectionProps) {
               colors={colors}
               disabled={sketches.length < 2}
               onEdit={setEditingSketch}
-              onRemove={(id) => removeSketch(tabId, id)}
+              onRemove={(id) => {
+                  const sketch = sketches.find((s) => s.id === id)
+                  if (sketch) {
+                    pushUndo({ type: 'sketch', tabId, item: sketch })
+                    setUndoVisible(true)
+                  }
+                  removeSketch(tabId, id)
+                }}
               onToggleCollapse={(id) =>
                 updateSketch(tabId, id, { collapsed: !sketch.collapsed })
               }

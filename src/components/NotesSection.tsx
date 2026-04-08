@@ -6,6 +6,8 @@ import { MoveItemModal } from './MoveItemModal'
 import { SortableList } from './SortableList'
 import { ColorTokens } from '../theme'
 import { sortPinned } from '../utils/sortPinned'
+import { useUndoStore } from '../store/useUndoStore'
+import { UndoToast } from './UndoToast'
 
 interface NotesSectionProps {
   tabId: string
@@ -13,12 +15,14 @@ interface NotesSectionProps {
 }
 
 export function NotesSection({ tabId, colors }: NotesSectionProps) {
-  const { tabs, addNote, updateNote, removeNote, reorderNotes, moveNote } = useWorkspaceStore()
+  const { tabs, addNote, updateNote, removeNote, reorderNotes, moveNote, restoreNote } = useWorkspaceStore()
   const tab = tabs.find((t) => t.id === tabId)
   const notes = tab?.notes ?? []
   const sorted = sortPinned(notes)
   const [editingNote, setEditingNote] = useState<NoteCardType | null>(null)
   const [movingNoteId, setMovingNoteId] = useState<string | null>(null)
+  const { push: pushUndo } = useUndoStore()
+  const [undoVisible, setUndoVisible] = useState(false)
 
   return (
     <div>
@@ -39,6 +43,23 @@ export function NotesSection({ tabId, colors }: NotesSectionProps) {
             updateNote(tabId, editingNote.id, patch)
           }}
           onClose={() => setEditingNote(null)}
+        />
+      )}
+      {undoVisible && (
+        <UndoToast
+          message="Note removed"
+          colors={colors}
+          onUndo={() => {
+            const entry = useUndoStore.getState().pop()
+            if (entry && entry.type === 'note') {
+              restoreNote(entry.tabId, entry.item as NoteCardType)
+            }
+            setUndoVisible(false)
+          }}
+          onDismiss={() => {
+            useUndoStore.getState().pop()
+            setUndoVisible(false)
+          }}
         />
       )}
 
@@ -74,7 +95,14 @@ export function NotesSection({ tabId, colors }: NotesSectionProps) {
               colors={colors}
               disabled={notes.length < 2}
               onEdit={setEditingNote}
-              onRemove={(id) => removeNote(tabId, id)}
+              onRemove={(id) => {
+                  const note = notes.find((n) => n.id === id)
+                  if (note) {
+                    pushUndo({ type: 'note', tabId, item: note })
+                    setUndoVisible(true)
+                  }
+                  removeNote(tabId, id)
+                }}
               onToggleCollapse={(id) =>
                 updateNote(tabId, id, { collapsed: !note.collapsed })
               }

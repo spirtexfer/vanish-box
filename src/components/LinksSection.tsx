@@ -7,6 +7,8 @@ import { MoveItemModal } from './MoveItemModal'
 import { SortableList } from './SortableList'
 import { ColorTokens } from '../theme'
 import { sortPinned } from '../utils/sortPinned'
+import { useUndoStore } from '../store/useUndoStore'
+import { UndoToast } from './UndoToast'
 
 interface LinksSectionProps {
   tabId: string
@@ -14,12 +16,14 @@ interface LinksSectionProps {
 }
 
 export function LinksSection({ tabId, colors }: LinksSectionProps) {
-  const { tabs, addLink, updateLink, removeLink, reorderLinks, moveLink } = useWorkspaceStore()
+  const { tabs, addLink, updateLink, removeLink, reorderLinks, moveLink, restoreLink } = useWorkspaceStore()
   const tab = tabs.find((t) => t.id === tabId)
   const links = tab?.links ?? []
   const sorted = sortPinned(links)
   const [editing, setEditing] = useState<LinkItem | 'new' | null>(null)
   const [movingLinkId, setMovingLinkId] = useState<string | null>(null)
+  const { push: pushUndo } = useUndoStore()
+  const [undoVisible, setUndoVisible] = useState(false)
 
   function handleOpen(url: string) {
     invoke('open_url', { url }).catch((e) =>
@@ -56,6 +60,23 @@ export function LinksSection({ tabId, colors }: LinksSectionProps) {
           onClose={() => setEditing(null)}
         />
       )}
+      {undoVisible && (
+        <UndoToast
+          message="Link removed"
+          colors={colors}
+          onUndo={() => {
+            const entry = useUndoStore.getState().pop()
+            if (entry && entry.type === 'link') {
+              restoreLink(entry.tabId, entry.item as LinkItem)
+            }
+            setUndoVisible(false)
+          }}
+          onDismiss={() => {
+            useUndoStore.getState().pop()
+            setUndoVisible(false)
+          }}
+        />
+      )}
 
       {links.length === 0 ? (
         <div
@@ -90,7 +111,14 @@ export function LinksSection({ tabId, colors }: LinksSectionProps) {
               disabled={links.length < 2}
               onOpen={handleOpen}
               onEdit={setEditing}
-              onRemove={(id) => removeLink(tabId, id)}
+              onRemove={(id) => {
+                  const link = links.find((l) => l.id === id)
+                  if (link) {
+                    pushUndo({ type: 'link', tabId, item: link })
+                    setUndoVisible(true)
+                  }
+                  removeLink(tabId, id)
+                }}
               onTogglePin={(id) => updateLink(tabId, id, { pinned: !sorted.find(l => l.id === id)?.pinned })}
               onMove={setMovingLinkId}
             />

@@ -140,6 +140,10 @@ interface WorkspaceStore {
   moveSketch: (fromTabId: string, toTabId: string, sketchId: string) => void
   moveLink: (fromTabId: string, toTabId: string, linkId: string) => void
 
+  restoreNote: (tabId: string, note: NoteCard) => void
+  restoreSketch: (tabId: string, sketch: SketchCard) => void
+  restoreLink: (tabId: string, link: LinkItem) => void
+
   createTabFromTemplate: (template: TabTemplate, color: TabColor) => void
 
   updateSettings: (s: Partial<Settings>) => void
@@ -496,6 +500,27 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
               t.id === tabId
                 ? { ...t, links: t.links.filter((l) => l.id !== linkId) }
                 : t
+            ),
+          })),
+
+        restoreNote: (tabId, note) =>
+          set((state) => ({
+            tabs: state.tabs.map((t) =>
+              t.id === tabId ? { ...t, notes: [note, ...t.notes] } : t
+            ),
+          })),
+
+        restoreSketch: (tabId, sketch) =>
+          set((state) => ({
+            tabs: state.tabs.map((t) =>
+              t.id === tabId ? { ...t, sketches: [sketch, ...t.sketches] } : t
+            ),
+          })),
+
+        restoreLink: (tabId, link) =>
+          set((state) => ({
+            tabs: state.tabs.map((t) =>
+              t.id === tabId ? { ...t, links: [link, ...t.links] } : t
             ),
           })),
 
