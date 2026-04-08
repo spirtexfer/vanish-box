@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   DndContext,
   PointerSensor,
@@ -24,6 +24,8 @@ import { ColorTokens, TAB_COLOR_VALUES } from '../theme'
 
 interface TabBarProps {
   colors: ColorTokens
+  triggerNewTab?: boolean
+  onTriggerNewTabDone?: () => void
 }
 
 interface SortableTabProps {
@@ -150,7 +152,7 @@ function SortableTab({
   )
 }
 
-export function TabBar({ colors }: TabBarProps) {
+export function TabBar({ colors, triggerNewTab, onTriggerNewTabDone }: TabBarProps) {
   const { tabs, activeTabId, setActiveTab, createTab, updateTab, deleteTab, reorderTabs } =
     useWorkspaceStore()
   const [creating, setCreating] = useState(false)
@@ -163,6 +165,13 @@ export function TabBar({ colors }: TabBarProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   )
+
+  useEffect(() => {
+    if (triggerNewTab) {
+      setCreating(true)
+      onTriggerNewTabDone?.()
+    }
+  }, [triggerNewTab, onTriggerNewTabDone])
 
   function handleDragEnd({ active, over }: DragEndEvent) {
     if (!over || active.id === over.id || tabs.length < 2) return

@@ -5,6 +5,7 @@ import { COLORS } from '../theme'
 import { TabBar } from './TabBar'
 import { TabContent } from './TabContent'
 import { SettingsPanel } from './SettingsPanel'
+import { CommandPalette } from './CommandPalette'
 
 export function WorkspacePanel() {
   const { tabs, activeTabId, settings, updateSettings, clearTab } = useWorkspaceStore()
@@ -13,12 +14,25 @@ export function WorkspacePanel() {
 
   const [showSettings, setShowSettings] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
+  const [showPalette, setShowPalette] = useState(false)
+  const [triggerNewTab, setTriggerNewTab] = useState(false)
 
   useEffect(() => {
     invoke('update_shortcut', { keybind: settings.keybind }).catch((e) =>
       console.error('[VanishBox] Failed to apply keybind:', e)
     )
   }, []) // run once on mount
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'k' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault()
+        setShowPalette((prev) => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   function handleClearConfirmed() {
     if (activeTab) clearTab(activeTab.id)
@@ -42,6 +56,15 @@ export function WorkspacePanel() {
           colors={colors}
           onUpdate={updateSettings}
           onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {showPalette && (
+        <CommandPalette
+          colors={colors}
+          onClose={() => setShowPalette(false)}
+          onOpenSettings={() => { setShowSettings(true); setShowPalette(false) }}
+          onNewTab={() => setTriggerNewTab(true)}
         />
       )}
 
@@ -183,7 +206,11 @@ export function WorkspacePanel() {
         </div>
       </header>
 
-      <TabBar colors={colors} />
+      <TabBar
+        colors={colors}
+        triggerNewTab={triggerNewTab}
+        onTriggerNewTabDone={() => setTriggerNewTab(false)}
+      />
 
       {activeTab && <TabContent tab={activeTab} colors={colors} />}
     </div>
