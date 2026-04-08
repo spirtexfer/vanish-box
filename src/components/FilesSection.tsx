@@ -6,6 +6,7 @@ import { useWorkspaceStore, WorkspaceFile } from '../store/useWorkspaceStore'
 import { FileCard } from './FileCard'
 import { SortableList } from './SortableList'
 import { ColorTokens } from '../theme'
+import { sortPinned } from '../utils/sortPinned'
 
 interface CopiedFileInfo {
   id: string
@@ -21,9 +22,10 @@ interface FilesSectionProps {
 }
 
 export function FilesSection({ tabId, colors }: FilesSectionProps) {
-  const { tabs, settings, addFiles, removeFile, reorderFiles } = useWorkspaceStore()
+  const { tabs, settings, addFiles, removeFile, reorderFiles, updateFile } = useWorkspaceStore()
   const tab = tabs.find((t) => t.id === tabId)
   const files = tab?.files ?? []
+  const sorted = sortPinned(files)
 
   const [isDraggingOver, setIsDraggingOver] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<{
@@ -224,9 +226,20 @@ export function FilesSection({ tabId, colors }: FilesSectionProps) {
             Drop files here
           </div>
         ) : (
-          <SortableList items={files} onReorder={(from, to) => reorderFiles(tabId, from, to)}>
+          <SortableList
+            items={sorted}
+            onReorder={(fromIdx, toIdx) => {
+              const fromId = sorted[fromIdx].id
+              const toId = sorted[toIdx].id
+              reorderFiles(
+                tabId,
+                files.findIndex((f) => f.id === fromId),
+                files.findIndex((f) => f.id === toId),
+              )
+            }}
+          >
             <ul style={{ margin: 0, padding: '5px', listStyle: 'none' }}>
-              {files.map((file) => (
+              {sorted.map((file) => (
                 <FileCard
                   key={file.id}
                   file={file}
@@ -238,6 +251,7 @@ export function FilesSection({ tabId, colors }: FilesSectionProps) {
                   onDelete={(id, sourcePath, storedPath) =>
                     setDeleteConfirm({ fileId: id, sourcePath, storedPath })
                   }
+                  onTogglePin={(id) => updateFile(tabId, id, { pinned: !sorted.find(f => f.id === id)?.pinned })}
                 />
               ))}
             </ul>

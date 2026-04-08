@@ -21,9 +21,10 @@ interface FileCardProps {
   onOpen: (storedPath: string) => void
   onRemove: (fileId: string) => void
   onDelete: (fileId: string, sourcePath: string, storedPath: string) => void
+  onTogglePin: (fileId: string) => void
 }
 
-export function FileCard({ file, settings, colors, disabled, onOpen, onRemove, onDelete }: FileCardProps) {
+export function FileCard({ file, settings, colors, disabled, onOpen, onRemove, onDelete, onTogglePin }: FileCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: file.id,
     disabled,
@@ -86,6 +87,21 @@ export function FileCard({ file, settings, colors, disabled, onOpen, onRemove, o
           {formatSize(file.size)}
         </span>
       )}
+
+      <button
+        aria-label={file.pinned ? 'unpin' : 'pin'}
+        title={file.pinned ? 'Unpin' : 'Pin to top'}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => { e.stopPropagation(); onTogglePin(file.id) }}
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: file.pinned ? colors.accent : colors.textMuted,
+          fontSize: '12px', lineHeight: 1, padding: '0 2px', flexShrink: 0,
+          opacity: file.pinned ? 1 : 0.4,
+        }}
+      >
+        📌
+      </button>
 
       <button
         aria-label="remove"

@@ -10,9 +10,10 @@ interface SketchCardProps {
   onEdit: (sketch: SketchCardType) => void
   onRemove: (sketchId: string) => void
   onToggleCollapse: (sketchId: string) => void
+  onTogglePin: (sketchId: string) => void
 }
 
-export function SketchCard({ sketch, colors, disabled, onEdit, onRemove, onToggleCollapse }: SketchCardProps) {
+export function SketchCard({ sketch, colors, disabled, onEdit, onRemove, onToggleCollapse, onTogglePin }: SketchCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: sketch.id,
     disabled,
@@ -81,6 +82,20 @@ export function SketchCard({ sketch, colors, disabled, onEdit, onRemove, onToggl
         >
           {sketch.title}
         </span>
+        <button
+          aria-label={sketch.pinned ? 'unpin' : 'pin'}
+          title={sketch.pinned ? 'Unpin' : 'Pin to top'}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); onTogglePin(sketch.id) }}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: sketch.pinned ? colors.accent : colors.textMuted,
+            fontSize: '12px', lineHeight: 1, padding: '0 2px', flexShrink: 0,
+            opacity: sketch.pinned ? 1 : 0.4,
+          }}
+        >
+          📌
+        </button>
         <button
           aria-label="remove sketch"
           onPointerDown={(e) => e.stopPropagation()}

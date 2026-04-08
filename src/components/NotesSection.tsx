@@ -4,6 +4,7 @@ import { NoteCard } from './NoteCard'
 import { NoteEditor } from './NoteEditor'
 import { SortableList } from './SortableList'
 import { ColorTokens } from '../theme'
+import { sortPinned } from '../utils/sortPinned'
 
 interface NotesSectionProps {
   tabId: string
@@ -14,6 +15,7 @@ export function NotesSection({ tabId, colors }: NotesSectionProps) {
   const { tabs, addNote, updateNote, removeNote, reorderNotes } = useWorkspaceStore()
   const tab = tabs.find((t) => t.id === tabId)
   const notes = tab?.notes ?? []
+  const sorted = sortPinned(notes)
   const [editingNote, setEditingNote] = useState<NoteCardType | null>(null)
 
   return (
@@ -42,8 +44,19 @@ export function NotesSection({ tabId, colors }: NotesSectionProps) {
           No notes yet
         </div>
       ) : (
-        <SortableList items={notes} onReorder={(from, to) => reorderNotes(tabId, from, to)}>
-          {notes.map((note) => (
+        <SortableList
+          items={sorted}
+          onReorder={(fromIdx, toIdx) => {
+            const fromId = sorted[fromIdx].id
+            const toId = sorted[toIdx].id
+            reorderNotes(
+              tabId,
+              notes.findIndex((n) => n.id === fromId),
+              notes.findIndex((n) => n.id === toId),
+            )
+          }}
+        >
+          {sorted.map((note) => (
             <NoteCard
               key={note.id}
               note={note}
@@ -54,6 +67,7 @@ export function NotesSection({ tabId, colors }: NotesSectionProps) {
               onToggleCollapse={(id) =>
                 updateNote(tabId, id, { collapsed: !note.collapsed })
               }
+              onTogglePin={(id) => updateNote(tabId, id, { pinned: !sorted.find(n => n.id === id)?.pinned })}
             />
           ))}
         </SortableList>

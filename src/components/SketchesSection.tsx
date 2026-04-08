@@ -4,6 +4,7 @@ import { SketchCard } from './SketchCard'
 import { SketchEditor } from './SketchEditor'
 import { SortableList } from './SortableList'
 import { ColorTokens } from '../theme'
+import { sortPinned } from '../utils/sortPinned'
 
 interface SketchesSectionProps {
   tabId: string
@@ -14,6 +15,7 @@ export function SketchesSection({ tabId, colors }: SketchesSectionProps) {
   const { tabs, addSketch, updateSketch, removeSketch, reorderSketches } = useWorkspaceStore()
   const tab = tabs.find((t) => t.id === tabId)
   const sketches = tab?.sketches ?? []
+  const sorted = sortPinned(sketches)
   const [editingSketch, setEditingSketch] = useState<SketchCardType | null>(null)
 
   return (
@@ -43,8 +45,19 @@ export function SketchesSection({ tabId, colors }: SketchesSectionProps) {
           No sketches yet
         </div>
       ) : (
-        <SortableList items={sketches} onReorder={(from, to) => reorderSketches(tabId, from, to)}>
-          {sketches.map((sketch) => (
+        <SortableList
+          items={sorted}
+          onReorder={(fromIdx, toIdx) => {
+            const fromId = sorted[fromIdx].id
+            const toId = sorted[toIdx].id
+            reorderSketches(
+              tabId,
+              sketches.findIndex((s) => s.id === fromId),
+              sketches.findIndex((s) => s.id === toId),
+            )
+          }}
+        >
+          {sorted.map((sketch) => (
             <SketchCard
               key={sketch.id}
               sketch={sketch}
@@ -55,6 +68,7 @@ export function SketchesSection({ tabId, colors }: SketchesSectionProps) {
               onToggleCollapse={(id) =>
                 updateSketch(tabId, id, { collapsed: !sketch.collapsed })
               }
+              onTogglePin={(id) => updateSketch(tabId, id, { pinned: !sorted.find(s => s.id === id)?.pinned })}
             />
           ))}
         </SortableList>
