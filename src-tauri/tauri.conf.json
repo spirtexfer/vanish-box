@@ -20,9 +20,9 @@
         "decorations": false,
         "resizable": true,
         "alwaysOnTop": true,
-        "visible": false,
+        "visible": true,
         "center": true,
-        "skipTaskbar": true
+        "skipTaskbar": false
       }
     ],
     "security": {
