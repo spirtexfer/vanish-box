@@ -97,7 +97,7 @@ function makeDefaultTab(): Tab {
 
 const DEFAULT_SETTINGS: Settings = {
   theme: 'light',
-  keybind: 'ctrl+shift+v',
+  keybind: 'ctrl+shift+j',
   showFileSize: true,
   showFileTimestamp: true,
 }

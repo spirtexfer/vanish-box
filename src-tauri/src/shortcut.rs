@@ -1,7 +1,7 @@
 use tauri::App;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
-const DEFAULT_KEYBIND: &str = "ctrl+shift+v";
+const DEFAULT_KEYBIND: &str = "ctrl+shift+j";
 
 pub fn setup_shortcut(app: &mut App) -> tauri::Result<()> {
     use tauri::Manager;
