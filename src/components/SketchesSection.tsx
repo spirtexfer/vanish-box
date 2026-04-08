@@ -5,7 +5,6 @@ import { SketchEditor } from './SketchEditor'
 import { MoveItemModal } from './MoveItemModal'
 import { SortableList } from './SortableList'
 import { ColorTokens } from '../theme'
-import { sortPinned } from '../utils/sortPinned'
 import { useUndoStore } from '../store/useUndoStore'
 import { UndoToast } from './UndoToast'
 
@@ -18,7 +17,6 @@ export function SketchesSection({ tabId, colors }: SketchesSectionProps) {
   const { tabs, addSketch, updateSketch, removeSketch, reorderSketches, moveSketch, restoreSketch } = useWorkspaceStore()
   const tab = tabs.find((t) => t.id === tabId)
   const sketches = tab?.sketches ?? []
-  const sorted = sortPinned(sketches)
   const [editingSketch, setEditingSketch] = useState<SketchCardType | null>(null)
   const [movingSketchId, setMovingSketchId] = useState<string | null>(null)
   const { push: pushUndo } = useUndoStore()
@@ -78,18 +76,10 @@ export function SketchesSection({ tabId, colors }: SketchesSectionProps) {
         </div>
       ) : (
         <SortableList
-          items={sorted}
-          onReorder={(fromIdx, toIdx) => {
-            const fromId = sorted[fromIdx].id
-            const toId = sorted[toIdx].id
-            reorderSketches(
-              tabId,
-              sketches.findIndex((s) => s.id === fromId),
-              sketches.findIndex((s) => s.id === toId),
-            )
-          }}
+          items={sketches}
+          onReorder={(from, to) => reorderSketches(tabId, from, to)}
         >
-          {sorted.map((sketch) => (
+          {sketches.map((sketch) => (
             <SketchCard
               key={sketch.id}
               sketch={sketch}
@@ -107,7 +97,6 @@ export function SketchesSection({ tabId, colors }: SketchesSectionProps) {
               onToggleCollapse={(id) =>
                 updateSketch(tabId, id, { collapsed: !sketch.collapsed })
               }
-              onTogglePin={(id) => updateSketch(tabId, id, { pinned: !sorted.find(s => s.id === id)?.pinned })}
               onMove={setMovingSketchId}
             />
           ))}

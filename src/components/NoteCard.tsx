@@ -10,11 +10,10 @@ interface NoteCardProps {
   onEdit: (note: NoteCardType) => void
   onRemove: (noteId: string) => void
   onToggleCollapse: (noteId: string) => void
-  onTogglePin: (noteId: string) => void
   onMove: (noteId: string) => void
 }
 
-export function NoteCard({ note, colors, disabled, onEdit, onRemove, onToggleCollapse, onTogglePin, onMove }: NoteCardProps) {
+export function NoteCard({ note, colors, disabled, onEdit, onRemove, onToggleCollapse, onMove }: NoteCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: note.id,
     disabled,
@@ -83,20 +82,6 @@ export function NoteCard({ note, colors, disabled, onEdit, onRemove, onToggleCol
         >
           {note.title}
         </span>
-        <button
-          aria-label={note.pinned ? 'unpin' : 'pin'}
-          title={note.pinned ? 'Unpin' : 'Pin to top'}
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => { e.stopPropagation(); onTogglePin(note.id) }}
-          style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            color: note.pinned ? colors.accent : colors.textMuted,
-            fontSize: '12px', lineHeight: 1, padding: '0 2px', flexShrink: 0,
-            opacity: note.pinned ? 1 : 0.4,
-          }}
-        >
-          📌
-        </button>
         <button
           aria-label="move note"
           title="Move to tab…"

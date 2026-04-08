@@ -6,7 +6,6 @@ import { LinkEditor } from './LinkEditor'
 import { MoveItemModal } from './MoveItemModal'
 import { SortableList } from './SortableList'
 import { ColorTokens } from '../theme'
-import { sortPinned } from '../utils/sortPinned'
 import { useUndoStore } from '../store/useUndoStore'
 import { UndoToast } from './UndoToast'
 
@@ -19,7 +18,6 @@ export function LinksSection({ tabId, colors }: LinksSectionProps) {
   const { tabs, addLink, updateLink, removeLink, reorderLinks, moveLink, restoreLink } = useWorkspaceStore()
   const tab = tabs.find((t) => t.id === tabId)
   const links = tab?.links ?? []
-  const sorted = sortPinned(links)
   const [editing, setEditing] = useState<LinkItem | 'new' | null>(null)
   const [movingLinkId, setMovingLinkId] = useState<string | null>(null)
   const { push: pushUndo } = useUndoStore()
@@ -92,18 +90,10 @@ export function LinksSection({ tabId, colors }: LinksSectionProps) {
         </div>
       ) : (
         <SortableList
-          items={sorted}
-          onReorder={(fromIdx, toIdx) => {
-            const fromId = sorted[fromIdx].id
-            const toId = sorted[toIdx].id
-            reorderLinks(
-              tabId,
-              links.findIndex((l) => l.id === fromId),
-              links.findIndex((l) => l.id === toId),
-            )
-          }}
+          items={links}
+          onReorder={(from, to) => reorderLinks(tabId, from, to)}
         >
-          {sorted.map((link) => (
+          {links.map((link) => (
             <LinkCard
               key={link.id}
               link={link}
@@ -119,7 +109,6 @@ export function LinksSection({ tabId, colors }: LinksSectionProps) {
                   }
                   removeLink(tabId, id)
                 }}
-              onTogglePin={(id) => updateLink(tabId, id, { pinned: !sorted.find(l => l.id === id)?.pinned })}
               onMove={setMovingLinkId}
             />
           ))}

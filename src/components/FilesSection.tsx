@@ -7,7 +7,6 @@ import { FileCard } from './FileCard'
 import { MoveItemModal } from './MoveItemModal'
 import { SortableList } from './SortableList'
 import { ColorTokens } from '../theme'
-import { sortPinned } from '../utils/sortPinned'
 
 interface CopiedFileInfo {
   id: string
@@ -23,10 +22,9 @@ interface FilesSectionProps {
 }
 
 export function FilesSection({ tabId, colors }: FilesSectionProps) {
-  const { tabs, settings, addFiles, removeFile, reorderFiles, updateFile, moveFile } = useWorkspaceStore()
+  const { tabs, settings, addFiles, removeFile, reorderFiles, moveFile } = useWorkspaceStore()
   const tab = tabs.find((t) => t.id === tabId)
   const files = tab?.files ?? []
-  const sorted = sortPinned(files)
 
   const [isDraggingOver, setIsDraggingOver] = useState(false)
   const [movingFileId, setMovingFileId] = useState<string | null>(null)
@@ -238,19 +236,11 @@ export function FilesSection({ tabId, colors }: FilesSectionProps) {
           </div>
         ) : (
           <SortableList
-            items={sorted}
-            onReorder={(fromIdx, toIdx) => {
-              const fromId = sorted[fromIdx].id
-              const toId = sorted[toIdx].id
-              reorderFiles(
-                tabId,
-                files.findIndex((f) => f.id === fromId),
-                files.findIndex((f) => f.id === toId),
-              )
-            }}
+            items={files}
+            onReorder={(from, to) => reorderFiles(tabId, from, to)}
           >
             <ul style={{ margin: 0, padding: '5px', listStyle: 'none' }}>
-              {sorted.map((file) => (
+              {files.map((file) => (
                 <FileCard
                   key={file.id}
                   file={file}
@@ -262,7 +252,6 @@ export function FilesSection({ tabId, colors }: FilesSectionProps) {
                   onDelete={(id, sourcePath, storedPath) =>
                     setDeleteConfirm({ fileId: id, sourcePath, storedPath })
                   }
-                  onTogglePin={(id) => updateFile(tabId, id, { pinned: !sorted.find(f => f.id === id)?.pinned })}
                   onMove={setMovingFileId}
                 />
               ))}
