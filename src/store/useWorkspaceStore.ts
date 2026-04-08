@@ -149,8 +149,8 @@ export function hostnameOrUrl(url: string): string {
 }
 
 export function migrateStore(state: any, fromVersion: number): any {
-  if (fromVersion === 0) {
-    return {
+  if (fromVersion < 1) {
+    state = {
       ...state,
       tabs: (state.tabs ?? []).map((tab: any) => ({
         ...tab,
@@ -166,9 +166,6 @@ export function migrateStore(state: any, fromVersion: number): any {
     }
   }
   // v1 → v2: pinned fields are optional, no transformation needed
-  if (fromVersion === 1) {
-    return state
-  }
   return state
 }
 
