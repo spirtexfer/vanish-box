@@ -44,3 +44,32 @@ describe('pinned flag', () => {
     expect(useWorkspaceStore.getState().tabs[0].links[0].pinned).toBe(true)
   })
 })
+
+describe('moveItem', () => {
+  it('moveNote moves a note from one tab to another', () => {
+    const store = useWorkspaceStore.getState()
+    const tab1Id = store.tabs[0].id
+    store.createTab('Tab B', 'green')
+    const tab2Id = useWorkspaceStore.getState().tabs[1].id
+    store.addNote(tab1Id)
+    const noteId = useWorkspaceStore.getState().tabs[0].notes[0].id
+    store.moveNote(tab1Id, tab2Id, noteId)
+    const s = useWorkspaceStore.getState()
+    expect(s.tabs[0].notes).toHaveLength(0)
+    expect(s.tabs[1].notes).toHaveLength(1)
+    expect(s.tabs[1].notes[0].id).toBe(noteId)
+  })
+
+  it('moveLink moves a link from one tab to another', () => {
+    const store = useWorkspaceStore.getState()
+    const tab1Id = store.tabs[0].id
+    store.createTab('Tab C', 'rose')
+    const tab2Id = useWorkspaceStore.getState().tabs[1].id
+    store.addLink(tab1Id, 'https://example.com', 'Ex')
+    const linkId = useWorkspaceStore.getState().tabs[0].links[0].id
+    store.moveLink(tab1Id, tab2Id, linkId)
+    const s = useWorkspaceStore.getState()
+    expect(s.tabs[0].links).toHaveLength(0)
+    expect(s.tabs[1].links[0].id).toBe(linkId)
+  })
+})

@@ -133,6 +133,11 @@ interface WorkspaceStore {
   updateLink: (tabId: string, linkId: string, patch: Partial<Pick<LinkItem, 'title' | 'url' | 'pinned'>>) => void
   removeLink: (tabId: string, linkId: string) => void
 
+  moveFile: (fromTabId: string, toTabId: string, fileId: string) => void
+  moveNote: (fromTabId: string, toTabId: string, noteId: string) => void
+  moveSketch: (fromTabId: string, toTabId: string, sketchId: string) => void
+  moveLink: (fromTabId: string, toTabId: string, linkId: string) => void
+
   updateSettings: (s: Partial<Settings>) => void
   reset: () => void
 }
@@ -283,6 +288,58 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
               t.id === tabId ? { ...t, links: arrayMove(t.links, fromIndex, toIndex) } : t
             ),
           })),
+
+        moveFile: (fromTabId, toTabId, fileId) =>
+          set((state) => {
+            const file = state.tabs.find((t) => t.id === fromTabId)?.files.find((f) => f.id === fileId)
+            if (!file) return state
+            return {
+              tabs: state.tabs.map((t) => {
+                if (t.id === fromTabId) return { ...t, files: t.files.filter((f) => f.id !== fileId) }
+                if (t.id === toTabId) return { ...t, files: [...t.files, file] }
+                return t
+              }),
+            }
+          }),
+
+        moveNote: (fromTabId, toTabId, noteId) =>
+          set((state) => {
+            const note = state.tabs.find((t) => t.id === fromTabId)?.notes.find((n) => n.id === noteId)
+            if (!note) return state
+            return {
+              tabs: state.tabs.map((t) => {
+                if (t.id === fromTabId) return { ...t, notes: t.notes.filter((n) => n.id !== noteId) }
+                if (t.id === toTabId) return { ...t, notes: [...t.notes, note] }
+                return t
+              }),
+            }
+          }),
+
+        moveSketch: (fromTabId, toTabId, sketchId) =>
+          set((state) => {
+            const sketch = state.tabs.find((t) => t.id === fromTabId)?.sketches.find((s) => s.id === sketchId)
+            if (!sketch) return state
+            return {
+              tabs: state.tabs.map((t) => {
+                if (t.id === fromTabId) return { ...t, sketches: t.sketches.filter((s) => s.id !== sketchId) }
+                if (t.id === toTabId) return { ...t, sketches: [...t.sketches, sketch] }
+                return t
+              }),
+            }
+          }),
+
+        moveLink: (fromTabId, toTabId, linkId) =>
+          set((state) => {
+            const link = state.tabs.find((t) => t.id === fromTabId)?.links.find((l) => l.id === linkId)
+            if (!link) return state
+            return {
+              tabs: state.tabs.map((t) => {
+                if (t.id === fromTabId) return { ...t, links: t.links.filter((l) => l.id !== linkId) }
+                if (t.id === toTabId) return { ...t, links: [...t.links, link] }
+                return t
+              }),
+            }
+          }),
 
         addNote: (tabId) => {
           const now = Date.now()
