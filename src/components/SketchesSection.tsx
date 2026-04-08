@@ -33,10 +33,10 @@ export function SketchesSection({ tabId, colors }: SketchesSectionProps) {
       )}
       {editingSketch && (
         <SketchEditor
-          dataUrl={editingSketch.dataUrl}
+          sketch={editingSketch}
           colors={colors}
-          onSave={(dataUrl) => {
-            updateSketch(tabId, editingSketch.id, { dataUrl })
+          onSave={(patch) => {
+            updateSketch(tabId, editingSketch.id, patch)
             setEditingSketch(null)
           }}
           onClose={() => setEditingSketch(null)}

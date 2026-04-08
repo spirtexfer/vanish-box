@@ -1,12 +1,13 @@
 import { useRef, useState, useEffect } from 'react'
+import { SketchCard } from '../store/useWorkspaceStore'
 import { ColorTokens } from '../theme'
 
 const MAX_HISTORY = 50
 
 interface SketchEditorProps {
-  dataUrl: string | null
+  sketch: SketchCard
   colors: ColorTokens
-  onSave: (dataUrl: string) => void
+  onSave: (patch: Partial<Pick<SketchCard, 'title' | 'dataUrl'>>) => void
   onClose: () => void
 }
 
@@ -19,8 +20,9 @@ function drawDataUrl(ctx: CanvasRenderingContext2D, src: string, onDone?: () => 
   img.src = src
 }
 
-export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorProps) {
+export function SketchEditor({ sketch, colors, onSave, onClose }: SketchEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [title, setTitle] = useState(sketch.title)
   const [tool, setTool] = useState<'pen' | 'eraser'>('pen')
   const [brushSize, setBrushSize] = useState(3)
   const lastPos = useRef<{ x: number; y: number } | null>(null)
@@ -39,8 +41,8 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
     if (!ctx) return
     ctx.fillStyle = '#ffffff'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
-    if (dataUrl) {
-      drawDataUrl(ctx, dataUrl, pushHistory)
+    if (sketch.dataUrl) {
+      drawDataUrl(ctx, sketch.dataUrl, pushHistory)
     } else {
       pushHistory()
     }
@@ -147,7 +149,10 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
   }
 
   function save() {
-    onSave(canvasRef.current!.toDataURL('image/png'))
+    onSave({
+      title: title.trim() || 'New sketch',
+      dataUrl: canvasRef.current!.toDataURL('image/png'),
+    })
     onClose()
   }
 
@@ -204,6 +209,24 @@ export function SketchEditor({ dataUrl, colors, onSave, onClose }: SketchEditorP
           boxShadow: colors.shadowModal,
         }}
       >
+        {/* Title */}
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          aria-label="sketch title"
+          style={{
+            fontSize: '15px',
+            fontWeight: 700,
+            border: 'none',
+            borderBottom: `1px solid ${colors.border}`,
+            padding: '4px 0 8px',
+            background: 'transparent',
+            color: colors.text,
+            outline: 'none',
+            letterSpacing: '-0.01em',
+          }}
+        />
+
         {/* Toolbar */}
         <div
           style={{
