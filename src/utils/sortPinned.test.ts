@@ -28,7 +28,7 @@ describe('sortPinned', () => {
   })
 
   it('returns all items when none are pinned', () => {
-    const items = [{ id: '1' }, { id: '2' }]
+    const items: { id: string; pinned?: boolean }[] = [{ id: '1' }, { id: '2' }]
     const result = sortPinned(items)
     expect(result).toHaveLength(2)
   })
