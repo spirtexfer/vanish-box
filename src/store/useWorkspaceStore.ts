@@ -5,6 +5,8 @@ export const TAB_COLORS = ['slate', 'blue', 'purple', 'green', 'amber', 'rose'] 
 export type TabColor = (typeof TAB_COLORS)[number]
 export const TAB_NAME_MAX_LEN = 20
 
+export type TabTemplate = 'blank' | 'research' | 'coding' | 'planning'
+
 export type SectionLayout = 'list' | 'grid'
 export type SectionType = 'files' | 'notes' | 'sketches' | 'links'
 
@@ -138,6 +140,8 @@ interface WorkspaceStore {
   moveSketch: (fromTabId: string, toTabId: string, sketchId: string) => void
   moveLink: (fromTabId: string, toTabId: string, linkId: string) => void
 
+  createTabFromTemplate: (template: TabTemplate, color: TabColor) => void
+
   updateSettings: (s: Partial<Settings>) => void
   reset: () => void
 }
@@ -174,6 +178,20 @@ export function migrateStore(state: any, fromVersion: number): any {
   return state
 }
 
+export const TEMPLATE_NAMES: Record<TabTemplate, string> = {
+  blank: 'Workspace',
+  research: 'Research',
+  coding: 'Coding',
+  planning: 'Planning',
+}
+
+const TEMPLATE_NOTES: Record<TabTemplate, string[]> = {
+  blank: [],
+  research: ['Sources', 'Summary'],
+  coding: ['TODO', 'Notes'],
+  planning: ['Goals', 'Next steps'],
+}
+
 export const useWorkspaceStore = create<WorkspaceStore>()(
   persist(
     (set) => {
@@ -191,6 +209,29 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
             sections: makeDefaultSections(),
             files: [],
             notes: [],
+            sketches: [],
+            links: [],
+          }
+          set((state) => ({ tabs: [...state.tabs, tab], activeTabId: tab.id }))
+        },
+
+        createTabFromTemplate: (template, color) => {
+          const now = Date.now()
+          const notes: NoteCard[] = TEMPLATE_NOTES[template].map((title) => ({
+            id: crypto.randomUUID(),
+            title,
+            body: '',
+            collapsed: false,
+            createdAt: now,
+            updatedAt: now,
+          }))
+          const tab: Tab = {
+            id: crypto.randomUUID(),
+            name: TEMPLATE_NAMES[template],
+            color,
+            sections: makeDefaultSections(),
+            files: [],
+            notes,
             sketches: [],
             links: [],
           }

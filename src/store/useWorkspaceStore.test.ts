@@ -73,3 +73,24 @@ describe('moveItem', () => {
     expect(s.tabs[1].links[0].id).toBe(linkId)
   })
 })
+
+describe('createTabFromTemplate', () => {
+  it('creates a Research tab with Sources and Summary notes', () => {
+    const store = useWorkspaceStore.getState()
+    store.createTabFromTemplate('research', 'blue')
+    const s = useWorkspaceStore.getState()
+    const newTab = s.tabs[s.tabs.length - 1]
+    expect(newTab.name).toBe('Research')
+    expect(newTab.notes).toHaveLength(2)
+    expect(newTab.notes[0].title).toBe('Sources')
+    expect(newTab.notes[1].title).toBe('Summary')
+  })
+
+  it('creates a blank tab with no starter notes', () => {
+    const store = useWorkspaceStore.getState()
+    store.createTabFromTemplate('blank', 'slate')
+    const s = useWorkspaceStore.getState()
+    const newTab = s.tabs[s.tabs.length - 1]
+    expect(newTab.notes).toHaveLength(0)
+  })
+})

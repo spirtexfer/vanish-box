@@ -13,13 +13,7 @@ import {
 } from '@dnd-kit/sortable'
 import { restrictToHorizontalAxis } from '@dnd-kit/modifiers'
 import { CSS } from '@dnd-kit/utilities'
-import {
-  useWorkspaceStore,
-  TAB_COLORS,
-  TAB_NAME_MAX_LEN,
-  Tab,
-  TabColor,
-} from '../store/useWorkspaceStore'
+import { useWorkspaceStore, TAB_COLORS, TAB_NAME_MAX_LEN, Tab, TabColor, TabTemplate, TEMPLATE_NAMES } from '../store/useWorkspaceStore'
 import { ColorTokens, TAB_COLOR_VALUES } from '../theme'
 
 interface TabBarProps {
@@ -153,11 +147,12 @@ function SortableTab({
 }
 
 export function TabBar({ colors, triggerNewTab, onTriggerNewTabDone }: TabBarProps) {
-  const { tabs, activeTabId, setActiveTab, createTab, updateTab, deleteTab, reorderTabs } =
+  const { tabs, activeTabId, setActiveTab, createTab, createTabFromTemplate, updateTab, deleteTab, reorderTabs } =
     useWorkspaceStore()
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
   const [newColor, setNewColor] = useState<TabColor>('blue')
+  const [selectedTemplate, setSelectedTemplate] = useState<TabTemplate>('blank')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
@@ -182,11 +177,16 @@ export function TabBar({ colors, triggerNewTab, onTriggerNewTabDone }: TabBarPro
   }
 
   function submitCreate() {
-    const name = newName.trim() || 'Workspace'
-    createTab(name, newColor)
+    if (selectedTemplate !== 'blank') {
+      createTabFromTemplate(selectedTemplate, newColor)
+    } else {
+      const name = newName.trim() || 'Workspace'
+      createTab(name, newColor)
+    }
     setCreating(false)
     setNewName('')
     setNewColor('blue')
+    setSelectedTemplate('blank')
   }
 
   function startEdit(tab: Tab) {
@@ -351,6 +351,27 @@ export function TabBar({ colors, triggerNewTab, onTriggerNewTabDone }: TabBarPro
               />
             ))}
           </div>
+          <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>
+            {(['blank', 'research', 'coding', 'planning'] as TabTemplate[]).map((t) => (
+              <button
+                key={t}
+                onClick={() => {
+                  setSelectedTemplate(t)
+                  if (t !== 'blank') setNewName(TEMPLATE_NAMES[t])
+                  else setNewName('')
+                }}
+                style={{
+                  padding: '2px 7px', fontSize: '10px', fontWeight: 600,
+                  borderRadius: '5px', border: 'none', cursor: 'pointer',
+                  background: selectedTemplate === t ? colors.accent : colors.bgHover,
+                  color: selectedTemplate === t ? '#fff' : colors.textMuted,
+                  textTransform: 'capitalize',
+                }}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
           <button
             onClick={submitCreate}
             style={{
@@ -367,7 +388,7 @@ export function TabBar({ colors, triggerNewTab, onTriggerNewTabDone }: TabBarPro
             Add
           </button>
           <button
-            onClick={() => setCreating(false)}
+            onClick={() => { setCreating(false); setSelectedTemplate('blank'); setNewName('') }}
             style={{
               fontSize: '11px',
               padding: '3px 8px',
