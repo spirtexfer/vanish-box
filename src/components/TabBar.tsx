@@ -134,7 +134,7 @@ function SortableTab({
             color: colors.textMuted,
             fontSize: '12px',
             lineHeight: 1,
-            padding: '0 1px',
+            padding: '2px 5px',
             flexShrink: 0,
             opacity: isActive ? 0.7 : 0.4,
           }}
