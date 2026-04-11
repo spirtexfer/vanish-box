@@ -241,7 +241,7 @@ export function TabBar({ colors, triggerNewTab, onTriggerNewTabDone }: TabBarPro
             }}
           >
             <p style={{ color: colors.text, fontSize: '13px', margin: '0 0 20px 0', lineHeight: 1.5 }}>
-              Delete this tab and all its content? This cannot be undone.
+              Delete this tab and all its content?
             </p>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
               <button

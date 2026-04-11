@@ -1,10 +1,11 @@
 import { create } from 'zustand'
-import type { NoteCard, SketchCard, LinkItem } from './useWorkspaceStore'
+import type { NoteCard, SketchCard, LinkItem, WorkspaceFile } from './useWorkspaceStore'
 
 export type UndoEntry =
   | { type: 'note'; tabId: string; item: NoteCard }
   | { type: 'sketch'; tabId: string; item: SketchCard }
   | { type: 'link'; tabId: string; item: LinkItem }
+  | { type: 'tab_clear'; tabId: string; files: WorkspaceFile[]; notes: NoteCard[]; sketches: SketchCard[]; links: LinkItem[] }
 
 interface UndoStore {
   stack: UndoEntry[]

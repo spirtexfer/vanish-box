@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import { useWorkspaceStore } from '../store/useWorkspaceStore'
+import { useUndoStore } from '../store/useUndoStore'
 import { COLORS } from '../theme'
 import { TabBar } from './TabBar'
 import { TabContent } from './TabContent'
 import { SettingsPanel } from './SettingsPanel'
 import { CommandPalette } from './CommandPalette'
+import { UndoToast } from './UndoToast'
 
 export function WorkspacePanel() {
-  const { tabs, activeTabId, settings, updateSettings, clearTab } = useWorkspaceStore()
+  const { tabs, activeTabId, settings, updateSettings, clearTab, restoreTabContent } = useWorkspaceStore()
+  const { push: pushUndo, pop: popUndo } = useUndoStore()
   const colors = COLORS[settings.theme]
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0]
 
@@ -16,6 +19,7 @@ export function WorkspacePanel() {
   const [confirmClear, setConfirmClear] = useState(false)
   const [showPalette, setShowPalette] = useState(false)
   const [triggerNewTab, setTriggerNewTab] = useState(false)
+  const [undoToast, setUndoToast] = useState<{ message: string } | null>(null)
 
   useEffect(() => {
     invoke('update_shortcut', { keybind: settings.keybind }).catch((e) =>
@@ -35,8 +39,32 @@ export function WorkspacePanel() {
   }, [])
 
   function handleClearConfirmed() {
-    if (activeTab) clearTab(activeTab.id)
+    if (activeTab) {
+      pushUndo({
+        type: 'tab_clear',
+        tabId: activeTab.id,
+        files: activeTab.files,
+        notes: activeTab.notes,
+        sketches: activeTab.sketches,
+        links: activeTab.links,
+      })
+      clearTab(activeTab.id)
+      setUndoToast({ message: 'Tab cleared' })
+    }
     setConfirmClear(false)
+  }
+
+  function handleUndoClear() {
+    const entry = popUndo()
+    if (entry?.type === 'tab_clear') {
+      restoreTabContent(entry.tabId, {
+        files: entry.files,
+        notes: entry.notes,
+        sketches: entry.sketches,
+        links: entry.links,
+      })
+    }
+    setUndoToast(null)
   }
 
   return (
@@ -93,7 +121,7 @@ export function WorkspacePanel() {
             }}
           >
             <p style={{ color: colors.text, fontSize: '13px', margin: '0 0 20px 0', lineHeight: 1.5 }}>
-              Clear all files, notes, and sketches from this tab? This cannot be undone.
+              Clear all files, notes, and sketches from this tab?
             </p>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
               <button
@@ -213,6 +241,15 @@ export function WorkspacePanel() {
       />
 
       {activeTab && <TabContent tab={activeTab} colors={colors} />}
+
+      {undoToast && (
+        <UndoToast
+          message={undoToast.message}
+          colors={colors}
+          onUndo={handleUndoClear}
+          onDismiss={() => setUndoToast(null)}
+        />
+      )}
     </div>
   )
 }

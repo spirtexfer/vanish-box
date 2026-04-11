@@ -12,8 +12,11 @@ dist
 dist-ssr
 *.local
 
-# Documentation (kept local only)
+# Documentation and tests (kept local only)
 *.md
+docs/
+*.test.ts
+*.test.tsx
 
 # Editor directories and files
 .vscode/*
